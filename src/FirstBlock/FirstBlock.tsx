@@ -5,7 +5,7 @@ import { Right } from "./Right";
 
 export const FirstBlock = () => {
     return (
-        <div className="col-center-4 md:row-center-12 justify-center h-full">
+        <div className="col-center-4 lg:row-center-12 justify-start lg:justify-center h-full">
             <Left />
             <Flip />
             <Bottom />

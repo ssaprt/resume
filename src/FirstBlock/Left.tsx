@@ -24,7 +24,7 @@ export const Left = () => {
         <motion.div
             style={{ opacity }}
             ref={(e) => ref(e?.parentNode as HTMLElement)}
-            className="col-center-1"
+            className="col-center-1 mt-10"
         >
             <SplitText
                 text="DENYS UKHAN"

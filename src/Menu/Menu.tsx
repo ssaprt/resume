@@ -1,11 +1,10 @@
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
+
 import { scrollManager } from "../scroll/ScrollManager";
 import { useScrollBlocks } from "../scroll/useScroll";
 import { ToTop } from "./ToTop";
 import { Top } from "./Top/Top";
-
-const RESERVE_HEIGHT = 64;
 
 const clamp = (value: number) => Math.min(Math.max(value, 0), 1);
 
@@ -16,33 +15,44 @@ export const Menu = () => {
         <div
             className="
                 fixed
-                z-9999
+                z-[9999]
                 top-0
                 left-0
                 w-12
-                h-dvh
+                box-border
                 py-10
                 flex
                 flex-col
                 gap-4
                 items-center
-                justify-stretch
             "
+            style={{
+                height: "var(--app-viewport-height, 100dvh)",
+            }}
         >
-            <Top />
-
-            <div
-                className="w-full flex flex-col items-center gap-2"
-                style={{
-                    height: `calc(100dvh - ${RESERVE_HEIGHT}px)`,
-                }}
-            >
-                {blocks.map((block) => {
-                    return <MenuBlock key={block.block} block={block} />;
-                })}
+            <div className="shrink-0">
+                <Top />
             </div>
 
-            <ToTop />
+            <div
+                className="
+                    w-full
+                    flex-1
+                    min-h-0
+                    flex
+                    flex-col
+                    items-center
+                    gap-2
+                "
+            >
+                {blocks.map((block) => (
+                    <MenuBlock key={block.block} block={block} />
+                ))}
+            </div>
+
+            <div className="shrink-0">
+                <ToTop />
+            </div>
         </div>
     );
 };
@@ -65,12 +75,11 @@ const MenuBlock = ({
 
     let translateY = 100;
     let scaleY = 0;
-    //eslint-disable-next-line
-    let transformOrigin: "top" | "bottom" = "top";
+
+    const transformOrigin: "top" | "bottom" =
+        block.direction === 1 ? "top" : "bottom";
 
     if (block.direction === 1) {
-        transformOrigin = "top";
-
         if (block.top < 0 && block.bottom > 0) {
             translateY = (1 - intersection) * 100;
             scaleY = 1;
@@ -79,8 +88,6 @@ const MenuBlock = ({
             scaleY = intersection;
         }
     } else {
-        transformOrigin = "bottom";
-
         if (block.top < 1 && block.bottom > 1) {
             translateY = -(1 - intersection) * 100;
             scaleY = 1;
@@ -95,7 +102,7 @@ const MenuBlock = ({
         scaleY = 1;
     }
 
-    const width = hovered || active ? (hovered ? "0.5rem" : "0.4rem") : "1px";
+    const width = hovered ? "0.5rem" : active ? "0.4rem" : "1px";
 
     const transition =
         hovered || (active && !wasActive)
@@ -130,12 +137,8 @@ const MenuBlock = ({
             onClick={() => scrollManager.scrollToSection(block.block)}
         >
             <motion.div
-                animate={{
-                    width,
-                }}
-                transition={{
-                    width: transition,
-                }}
+                animate={{ width }}
+                transition={{ width: transition }}
                 className="
                     min-h-0
                     rounded-full
