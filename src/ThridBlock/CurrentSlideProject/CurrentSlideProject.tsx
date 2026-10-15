@@ -15,6 +15,7 @@ const collection: CollectionItem[] = [
 ];
 
 export const CurrentSlideProject = ({ index }: { index: number }) => {
+    //eslint-disable-next-line
     const project = collection[index] ?? collection[0];
 
     return (
