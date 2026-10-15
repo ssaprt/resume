@@ -1,0 +1,30 @@
+@utility avalible {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 9999px;
+    background-color: var(--color-green-500);
+    translate: -50% -50%;
+}
+
+@utility avalible-ping {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0.75rem;
+    height: 0.75rem;
+    border-radius: 9999px;
+    background-color: var(--color-green-500);
+    translate: -50% -50%;
+    animation: available-ping 2s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+@keyframes available-ping {
+    75%,
+    100% {
+        scale: 2;
+        opacity: 0;
+    }
+}

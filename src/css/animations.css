@@ -1,0 +1,126 @@
+.glitch-text {
+    animation: glitch-main 1.8s steps(1, end) infinite;
+}
+
+.glitch-text::before,
+.glitch-text::after {
+    content: attr(data-text);
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    will-change: transform, opacity, clip-path;
+}
+
+.glitch-text::before {
+    color: var(--foreground);
+    clip-path: polygon(0 2%, 100% 2%, 100% 40%, 58% 40%, 54% 100%, 0 100%);
+    animation: glitch-a 1.8s steps(1, end) infinite;
+}
+
+.glitch-text::after {
+    color: var(--foreground);
+    clip-path: polygon(0 78%, 42% 78%, 46% 0, 100% 0, 100% 100%, 0 100%);
+    animation: glitch-b 1.566s steps(1, end) infinite reverse;
+}
+
+@keyframes glitch-main {
+    0%,
+    6%,
+    10%,
+    14%,
+    18%,
+    100% {
+        opacity: 1;
+        transform: translate(0);
+    }
+    7%,
+    15% {
+        opacity: 0.55;
+        transform: translateX(2.3333333333333335px);
+    }
+    9%,
+    17% {
+        opacity: 0.82;
+        transform: translateX(-1px);
+    }
+}
+
+@keyframes glitch-a {
+    0%,
+    6%,
+    14%,
+    22%,
+    70%,
+    100% {
+        transform: translate(0) skew(0);
+        opacity: 0;
+    }
+    7% {
+        transform: translate(7px, -2px) skew(3deg);
+        opacity: 0.95;
+    }
+    9% {
+        transform: translate(-7px, 1px) skew(-3deg);
+        opacity: 0.45;
+    }
+    15% {
+        transform: translate(3.5px, 2px) scaleX(1.025);
+        opacity: 0.8;
+    }
+    18% {
+        transform: translate(-3.5px, -1px);
+        opacity: 0.25;
+    }
+    23% {
+        transform: translate(7px, 0) scaleY(0.92);
+        opacity: 0.75;
+    }
+    27% {
+        transform: translate(0);
+        opacity: 0;
+    }
+}
+
+@keyframes glitch-b {
+    0%,
+    6%,
+    14%,
+    22%,
+    70%,
+    100% {
+        transform: translate(0) skew(0);
+        opacity: 0;
+    }
+    7% {
+        transform: translate(-7px, -2px) skew(-3deg);
+        opacity: 0.95;
+    }
+    9% {
+        transform: translate(7px, 1px) skew(3deg);
+        opacity: 0.45;
+    }
+    15% {
+        transform: translate(-3.5px, 2px) scaleX(1.025);
+        opacity: 0.8;
+    }
+    18% {
+        transform: translate(3.5px, -1px);
+        opacity: 0.25;
+    }
+    23% {
+        transform: translate(-7px, 0) scaleY(0.92);
+        opacity: 0.75;
+    }
+    27% {
+        transform: translate(0);
+        opacity: 0;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .glitch-text,
+    .glitch-text::before,
+    .glitch-text::after {
+        animation: none;
+    }
+}

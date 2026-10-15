@@ -1,0 +1,49 @@
+.textareaOverlay {
+    position: relative;
+    display: flex;
+    width: 100%;
+    height: auto;
+    min-height: 0;
+    flex: 0 1 auto;
+    z-index: 1;
+    overflow: visible;
+}
+
+.textarea {
+    position: relative;
+    display: block;
+    width: 100%;
+
+    min-width: 0;
+   height: auto;
+min-height: 0;
+max-height: 120px;
+overflow-y: hidden;
+  
+    box-sizing: border-box;
+    margin: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+
+    outline: 1px solid transparent;
+    box-shadow: none;
+    resize: none;
+
+    overflow-x: hidden;
+
+    scrollbar-width: none;
+}
+
+.textarea::-webkit-scrollbar {
+    display: none;
+    width: 0;
+    height: 0;
+}
+
+.textarea::-webkit-resizer {
+    display: none;
+}

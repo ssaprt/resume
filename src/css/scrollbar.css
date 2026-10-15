@@ -1,0 +1,22 @@
+/* Десктоп: скрываем полосу прокрутки везде */
+html,
+html body {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+html::-webkit-scrollbar,
+html body::-webkit-scrollbar {
+    display: none;
+}
+
+/* Скрываем на всех элементах для десктопа */
+html * {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+html *::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+}

@@ -1,0 +1,42 @@
+.root {
+    --ps-dot: #d97757;
+    --ps-text: #9b9994;
+    --ps-label-gap: 22px;
+
+    display: inline-flex;
+    align-items: center;
+    gap: var(--ps-label-gap);
+    color: var(--ps-text);
+    font-size: 15px;
+    line-height: 1;
+}
+
+.label {
+    white-space: nowrap;
+}
+
+.dots {
+    position: relative;
+    display: block;
+    flex: none;
+    width: 24px;
+    height: 24px;
+}
+
+.dot {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 3px;
+    height: 3px;
+    margin: -1.5px 0 0 -1.5px;
+    border-radius: 50%;
+    background: var(--curr);
+    will-change: transform, opacity;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .dot {
+        will-change: auto;
+    }
+}

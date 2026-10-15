@@ -1,0 +1,6 @@
+@use "sass:color";
+
+@function foreground-with-opacity($opacity) {
+    @return color.change(oklch(65.314% 0.13601 70.036)
+, $alpha: $opacity);
+}

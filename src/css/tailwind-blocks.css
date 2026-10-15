@@ -1,0 +1,77 @@
+/** ROW ------------------------------------ **/
+
+@utility row-stretch-* {
+    position: relative;
+    display: flex;
+    flex-direction: row;
+    align-items: stretch;
+    gap: calc(var(--spacing) * --value(integer));
+}
+
+@utility row-start-* {
+    position: relative;
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    gap: calc(var(--spacing) * --value(integer));
+}
+
+@utility row-center-* {
+    position: relative;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: calc(var(--spacing) * --value(integer));
+}
+
+@utility row-end-* {
+    position: relative;
+    display: flex;
+    flex-direction: row;
+    align-items: flex-end;
+    gap: calc(var(--spacing) * --value(integer));
+}
+
+/** ROW ------------------------------------ **/
+
+/** COLUMN ------------------------------------ **/
+
+@utility col-stretch-* {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: calc(var(--spacing) * --value(integer));
+}
+
+@utility col-start-* {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: calc(var(--spacing) * --value(integer));
+}
+
+@utility col-center-* {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: calc(var(--spacing) * --value(integer));
+}
+
+@utility col-end-* {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: calc(var(--spacing) * --value(integer));
+}
+
+/** COLUMN ------------------------------------ **/
+
+@utility default-block-* {
+    @apply col-start-1 w-full rounded-md bg-fg/5 border-1 border-fg/10;
+    padding: calc(var(--spacing) * --value(integer));
+    overflow: hidden;
+}
