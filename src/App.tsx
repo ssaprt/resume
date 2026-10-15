@@ -72,21 +72,27 @@ function App() {
                             <ControlScrollSection id="2">
                                 <SecondBlock />
                             </ControlScrollSection>
-
                             <UnControlScrollSection id="3">
                                 <ThridBlock />
                             </UnControlScrollSection>
 
-                            <UnControlScrollSection
-                                id="4"
-                                style={{ zIndex: 2 }}
-                            >
-                                <ForthBlock />
-                            </UnControlScrollSection>
+                            {isDesktop && (
+                                <>
+                                    <UnControlScrollSection
+                                        id="4"
+                                        style={{ zIndex: 2 }}
+                                    >
+                                        <ForthBlock />
+                                    </UnControlScrollSection>
 
-                            <ControlScrollSection id="5" className="z-1">
-                                <FiveBlock />
-                            </ControlScrollSection>
+                                    <ControlScrollSection
+                                        id="5"
+                                        className="z-1"
+                                    >
+                                        <FiveBlock />
+                                    </ControlScrollSection>
+                                </>
+                            )}
                         </main>
                     )}
                 </div>
