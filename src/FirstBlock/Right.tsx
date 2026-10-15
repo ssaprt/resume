@@ -1,10 +1,12 @@
 import { motion, useTransform } from "framer-motion";
+import { useDevice } from "../scroll/useDevice";
 import { useScrollElementMotion } from "../scroll/useScroll";
 
 const letters = "I`M A CREATIVE".split("");
 const letters2 = "FULLSTACK WEB DEVELOPER".split("");
 
 export const Right = () => {
+    const { isDesktop } = useDevice();
     const { ref, leaveProgress } = useScrollElementMotion();
 
     const y = useTransform(
@@ -14,16 +16,31 @@ export const Right = () => {
     const opacity = useTransform(leaveProgress, [0, 0.5], [1, 0]);
     const x = useTransform(leaveProgress, [0, 1], [0, 500]);
 
-    return (
+    return !isDesktop ? (
+        <motion.div
+            style={{ y, opacity, x }}
+            ref={(e) => ref(e?.parentNode as HTMLElement)}
+            className="col-center-3 w-full mt-4
+            "
+        >
+            <h1 className="transform scale-y-200 uppercase tracking-[0.1px] text-[8vw]!">
+                I`M A CREATIVE
+            </h1>
+
+            <h3 className={`transform scale-y-200 uppercase tracking-[0.4px]`}>
+                FULLSTACK WEB DEVELOPER
+            </h3>
+        </motion.div>
+    ) : (
         <motion.div
             style={{ y, opacity, x }}
             ref={(e) => ref(e?.parentNode as HTMLElement)}
             className="flex
             flex-col
             gap-[1px]
-            items-center md:items-start
+            items-start
             z-1
-            w-full md:w-1/3
+            md:w-1/3
             "
         >
             <div className="flex flex-row gap-0 py-3 pt-4">

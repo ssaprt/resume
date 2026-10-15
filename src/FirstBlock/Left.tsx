@@ -24,11 +24,11 @@ export const Left = () => {
         <motion.div
             style={{ opacity }}
             ref={(e) => ref(e?.parentNode as HTMLElement)}
-            className="col-center-1 mt-10"
+            className="col-center-2 mt-10"
         >
             <SplitText
                 text="DENYS UKHAN"
-                className="uppercase tracking-[0.1px] text-4xl!"
+                className="uppercase tracking-[0.1px] text-[9vw]! transform scale-y-200"
                 left={{
                     x: 0,
                     y: 10,
@@ -51,20 +51,22 @@ export const Left = () => {
                     leaveDirection,
                 }}
             />
-            <span>Location: Georgia, Batumi</span>
-            <div className="row-center-0">
-                <motion.div className="relative mr-3 w-2 h-2">
-                    <div className="avalible" />
-                    <div className="avalible-ping" />
-                </motion.div>
-                <span>Available for a full-time position</span>
+            <div className="col-center-1">
+                <span>Location: Georgia, Batumi</span>
+                <div className="row-center-0">
+                    <motion.div className="relative mr-3 w-2 h-2">
+                        <div className="avalible" />
+                        <div className="avalible-ping" />
+                    </motion.div>
+                    <span>Available for a full-time position</span>
+                </div>
             </div>
         </motion.div>
     ) : (
         <motion.div
             style={{ y, opacity, x }}
             ref={(e) => ref(e?.parentNode as HTMLElement)}
-            className="flex flex-col gap-[1px] items-center md:items-end z-1 transform text-white w-full md:w-1/3 
+            className="col-end-0 gap-[1px] z-1 transform text-white w-1/3 
                         p-4
                         overflow-hidden"
         >

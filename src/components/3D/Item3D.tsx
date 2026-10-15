@@ -15,6 +15,7 @@ import {
 } from "../../FirstBlock/author-icon.config";
 
 import { IconAuthor } from "../../FirstBlock/IconAuthor";
+import { useDevice } from "../../scroll/useDevice";
 
 type Props = {
     loading?: (loading: boolean) => void;
@@ -89,6 +90,7 @@ export const Item3D = ({
 }: Props) => {
     const { scene } = useGLTF(path);
     const { camera, gl } = useThree();
+    const { isDesktop } = useDevice();
 
     const clonedScene = useMemo(() => scene.clone(true), [scene]);
 
@@ -723,6 +725,7 @@ export const Item3D = ({
             </group>
 
             <OrbitControls
+                enabled={isDesktop}
                 ref={controlsRef}
                 autoRotate={false}
                 autoRotateSpeed={autorotateSpeed}
