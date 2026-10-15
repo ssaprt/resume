@@ -25,7 +25,7 @@ export const Flip = () => {
                 items-center
                 w-6/8
                 max-w-[340px]
-                lg:max-w-auto
+                lg:max-w-full
                 lg:w-1/3
                 h-auto
                 aspect-square
