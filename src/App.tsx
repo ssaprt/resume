@@ -1,15 +1,18 @@
+import { Canvas } from "@react-three/fiber";
 import { motion } from "framer-motion";
+import { useCallback, useState } from "react";
+
 import ControlScrollSection from "./components/Sections/ControlScrollSection";
 import { UnControlScrollSection } from "./components/Sections/UnControlScrollSection";
 import DotGrid from "./DotGrid";
 import { FirstBlock } from "./FirstBlock/FirstBlock";
-
 import { FiveBlock } from "./FiveBlock/FiveBlock";
 import { ForthBlock } from "./ForthBlock/ForthBlock";
 import { GlitchTransition } from "./GlitchTransition";
 import { Loader } from "./Loader/Loader";
 import { Menu } from "./Menu/Menu";
 import { SecondBlock } from "./SecondBlock/SecondBlock";
+import { ModelBatchPreloader } from "./shared/AssetLoader/ModelBatchPreloader";
 import { useAssetReady } from "./shared/AssetLoader/useAssetReady";
 import { ThridBlock } from "./ThridBlock/ThridBlock";
 import { TopRight } from "./TopRight";
@@ -17,10 +20,40 @@ import { TopRight } from "./TopRight";
 function App() {
     const isAssetReady = useAssetReady();
 
+    const [modelsPreloaded, setModelsPreloaded] = useState(false);
+
+    const handlePreloadComplete = useCallback(() => {
+        setModelsPreloaded(true);
+    }, []);
+
     return (
         <>
+            {!modelsPreloaded && (
+                <Canvas
+                    frameloop="never"
+                    dpr={1}
+                    gl={{
+                        antialias: false,
+                        alpha: true,
+                    }}
+                    style={{
+                        position: "fixed",
+                        left: 0,
+                        top: 0,
+                        width: 1,
+                        height: 1,
+                        opacity: 0,
+                        pointerEvents: "none",
+                    }}
+                >
+                    <ModelBatchPreloader onComplete={handlePreloadComplete} />
+                </Canvas>
+            )}
+
             <Loader />
+
             <GlitchTransition active={isAssetReady} />
+
             <DotGrid
                 gridSize={10}
                 cursorRadius={50}
@@ -39,26 +72,29 @@ function App() {
             <TopRight />
             <Menu />
 
-            <div className="relative w-full">
-                <ControlScrollSection id="1">
-                    <FirstBlock />
-                </ControlScrollSection>
+            {modelsPreloaded && (
+                <div className="relative w-full">
+                    <ControlScrollSection id="1">
+                        <FirstBlock />
+                    </ControlScrollSection>
 
-                <ControlScrollSection id="2">
-                    <SecondBlock />
-                </ControlScrollSection>
+                    <ControlScrollSection id="2">
+                        <SecondBlock />
+                    </ControlScrollSection>
 
-                <UnControlScrollSection id="3">
-                    <ThridBlock />
-                </UnControlScrollSection>
+                    <UnControlScrollSection id="3">
+                        <ThridBlock />
+                    </UnControlScrollSection>
 
-                <UnControlScrollSection id="4" style={{ zIndex: 2 }}>
-                    <ForthBlock />
-                </UnControlScrollSection>
-                <ControlScrollSection id="5" className="z-1">
-                    <FiveBlock />
-                </ControlScrollSection>
-            </div>
+                    <UnControlScrollSection id="4" style={{ zIndex: 2 }}>
+                        <ForthBlock />
+                    </UnControlScrollSection>
+
+                    <ControlScrollSection id="5" className="z-1">
+                        <FiveBlock />
+                    </ControlScrollSection>
+                </div>
+            )}
 
             <motion.div
                 className="pointer-events-none fixed inset-0 z-[9999]"

@@ -2,13 +2,24 @@ import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { visualizer } from "rollup-plugin-visualizer";
 import { defineConfig } from "vite";
 import svgr from "vite-plugin-svgr";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig({
-    plugins: [react(), tailwindcss(), svgr()],
+    plugins: [
+        react(),
+        tailwindcss(),
+        svgr(),
+        visualizer({
+            filename: "dist/stats.html",
+            gzipSize: true,
+            brotliSize: true,
+            open: true,
+        }),
+    ],
 
     envPrefix: ["VITE_", "NEXT_PUBLIC_"],
 

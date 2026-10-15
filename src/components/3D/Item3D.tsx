@@ -2,8 +2,6 @@ import { Center, OrbitControls, useGLTF } from "@react-three/drei";
 
 import { useFrame, useThree } from "@react-three/fiber";
 
-import { clone } from "lodash";
-
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { createRoot, type Root } from "react-dom/client";
@@ -92,7 +90,7 @@ export const Item3D = ({
     const { scene } = useGLTF(path);
     const { camera, gl } = useThree();
 
-    const clonedScene = useMemo(() => clone(scene), [scene]);
+    const clonedScene = useMemo(() => scene.clone(true), [scene]);
 
     const htmlFront = useMemo(
         () => clonedScene.getObjectByName("HTML_FRONT"),
@@ -736,5 +734,3 @@ export const Item3D = ({
         </>
     );
 };
-
-useGLTF.preload("/niccle.glb");

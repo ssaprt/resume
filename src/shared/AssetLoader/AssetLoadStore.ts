@@ -1,8 +1,11 @@
+import { MODEL_ASSETS } from "./AssetManifest";
+
 type Listener = () => void;
 
 class AssetLoadStore {
-    private assets = new Map<string, boolean>();
-    private listeners = new Set<Listener>();
+    private assets = new Map<string, boolean>(
+        MODEL_ASSETS.map(({ name }) => [name, false]),
+    );
 
     register(name: string) {
         if (this.assets.has(name)) {
@@ -22,8 +25,29 @@ class AssetLoadStore {
         this.emit();
     }
 
+    readyMany(names: readonly string[]) {
+        let changed = false;
+
+        for (const name of names) {
+            if (this.assets.get(name) === true) {
+                continue;
+            }
+
+            this.assets.set(name, true);
+            changed = true;
+        }
+
+        if (changed) {
+            this.emit();
+        }
+    }
+
     reset(name: string) {
         if (!this.assets.has(name)) {
+            return;
+        }
+
+        if (this.assets.get(name) === false) {
             return;
         }
 
@@ -40,7 +64,10 @@ class AssetLoadStore {
     }
 
     clear() {
-        this.assets.clear();
+        this.assets = new Map(
+            MODEL_ASSETS.map(({ name }) => [name, false] as const),
+        );
+
         this.emit();
     }
 
@@ -69,6 +96,8 @@ class AssetLoadStore {
             this.listeners.delete(listener);
         };
     }
+
+    private listeners = new Set<Listener>();
 
     private emit() {
         for (const listener of this.listeners) {
