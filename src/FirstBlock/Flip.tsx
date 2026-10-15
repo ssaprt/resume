@@ -23,7 +23,10 @@ export const Flip = () => {
                 flex
                 flex-row
                 items-center
-                w-4/8 md:w-1/3
+                w-6/8
+                max-w-[340px]
+                lg:max-w-auto
+                lg:w-1/3
                 h-auto
                 aspect-square
                 justify-center
