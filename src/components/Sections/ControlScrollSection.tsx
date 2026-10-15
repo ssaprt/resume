@@ -17,7 +17,7 @@ export default function ControlScrollSection({
             data-scroll-block
             data-control-scroll="true"
             data-section-id={id}
-            className={`h-screen ${className}`}
+            className={`h-dvh ${className}`}
         >
             {children}
         </section>
