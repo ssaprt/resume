@@ -2,6 +2,7 @@ export type DeviceType = "mobile" | "desktop";
 
 class DeviceManager {
     private type: DeviceType | null = null;
+
     private listeners = new Set<() => void>();
 
     init() {
@@ -27,13 +28,13 @@ class DeviceManager {
         return this.type;
     }
 
-    subscribe(listener: () => void) {
+    subscribe = (listener: () => void) => {
         this.listeners.add(listener);
 
         return () => {
             this.listeners.delete(listener);
         };
-    }
+    };
 
     private update = () => {
         const nextType: DeviceType = window.matchMedia("(pointer: coarse)")

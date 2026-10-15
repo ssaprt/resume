@@ -1,5 +1,7 @@
 import { motion, useTransform } from "framer-motion";
 
+import SplitText from "../components/text/ScatterText";
+import { useDevice } from "../scroll/useDevice";
 import { useScrollElementMotion } from "../scroll/useScroll";
 import { SubLeft } from "./SubLeft";
 
@@ -7,16 +9,58 @@ const letters = ["D", "e", "n", "y", "s", "U", "k", "h", "a", "n"];
 
 export const Left = () => {
     const { ref, leaveProgress, leaveDirection } = useScrollElementMotion();
+    const { isMobile } = useDevice();
 
     const y = useTransform(
         [leaveProgress, leaveDirection],
         ([progress, direction]: number[]) =>
             -document.documentElement.clientHeight * direction * progress,
     );
+
     const opacity = useTransform(leaveProgress, [0, 0.65], [1, 0]);
     const x = useTransform(leaveProgress, [0, 1], [0, -500]);
 
-    return (
+    return isMobile ? (
+        <motion.div
+            style={{ opacity }}
+            ref={(e) => ref(e?.parentNode as HTMLElement)}
+            className="col-center-1"
+        >
+            <SplitText
+                text="DENYS UKHAN"
+                className="uppercase tracking-[0.1px] text-4xl!"
+                left={{
+                    x: 0,
+                    y: 10,
+                    rotate: 0,
+                    scale: 0,
+                    opacity: 0,
+                }}
+                right={{
+                    x: 0,
+                    y: 10,
+                    rotate: 0,
+                    scale: 0,
+                    opacity: 0,
+                }}
+                split={0.5}
+                stagger={0.05}
+                as="h1"
+                scroll={{
+                    leaveProgress,
+                    leaveDirection,
+                }}
+            />
+            <span>Location: Georgia, Batumi</span>
+            <div className="row-center-0">
+                <motion.div className="relative mr-3 w-2 h-2">
+                    <div className="avalible" />
+                    <div className="avalible-ping" />
+                </motion.div>
+                <span>Available for a full-time position</span>
+            </div>
+        </motion.div>
+    ) : (
         <motion.div
             style={{ y, opacity, x }}
             ref={(e) => ref(e?.parentNode as HTMLElement)}

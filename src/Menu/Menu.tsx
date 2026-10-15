@@ -5,7 +5,7 @@ import { useScrollBlocks } from "../scroll/useScroll";
 import { ToTop } from "./ToTop";
 import { Top } from "./Top/Top";
 
-const RESERVE_HEIGHT = 160;
+const RESERVE_HEIGHT = 64;
 
 const clamp = (value: number) => Math.min(Math.max(value, 0), 1);
 

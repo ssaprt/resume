@@ -11,8 +11,8 @@ import { ForthBlock } from "./ForthBlock/ForthBlock";
 import { GlitchTransition } from "./GlitchTransition";
 import { Loader } from "./Loader/Loader";
 import { Menu } from "./Menu/Menu";
-import { initScroll } from "./scroll/initScroll";
 import { scrollManager } from "./scroll/ScrollManager";
+import { useDevice } from "./scroll/useDevice";
 import { SecondBlock } from "./SecondBlock/SecondBlock";
 import { ModelBatchPreloader } from "./shared/AssetLoader/ModelBatchPreloader";
 import { useAssetReady } from "./shared/AssetLoader/useAssetReady";
@@ -21,11 +21,12 @@ import { TopRight } from "./TopRight";
 
 function App() {
     const isAssetReady = useAssetReady();
+    const { isDesktop } = useDevice();
 
     const [modelsPreloaded, setModelsPreloaded] = useState(false);
 
     useEffect(() => {
-        initScroll();
+        scrollManager.init();
 
         return () => {
             scrollManager.destroy();
@@ -94,20 +95,22 @@ function App() {
             <Loader />
             <GlitchTransition active={isAssetReady} />
 
-            <DotGrid
-                gridSize={10}
-                cursorRadius={50}
-                falloff={22}
-                baseRadius={1}
-                maxRadius={2}
-                baseOpacity={0.12}
-                maxOpacity={0.35}
-                distortion={28}
-                smoothness={1}
-                jellySmoothness={0.11}
-                cursorDotSize={8}
-                circleOpacity={1}
-            />
+            {isDesktop && (
+                <DotGrid
+                    gridSize={10}
+                    cursorRadius={50}
+                    falloff={22}
+                    baseRadius={1}
+                    maxRadius={2}
+                    baseOpacity={0.12}
+                    maxOpacity={0.35}
+                    distortion={28}
+                    smoothness={1}
+                    jellySmoothness={0.11}
+                    cursorDotSize={8}
+                    circleOpacity={1}
+                />
+            )}
 
             <TopRight />
             <Menu />

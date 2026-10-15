@@ -149,7 +149,7 @@ body {
     overflow-y: auto;
     overscroll-behavior: contain;
     -webkit-overflow-scrolling: touch;
-    background-color: var(--browser-edge-color);
+
     scrollbar-width: none;
 }
 
@@ -173,7 +173,6 @@ body {
     position: relative;
     width: 100%;
     min-height: 100%;
-    background-color: var(--background);
 }
 
 /* Safari safe areas */
