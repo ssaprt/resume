@@ -142,6 +142,7 @@ class ScrollManager {
     private alignedUncontrolledDirection: 1 | -1 | null = null;
 
     private alignedUncontrolledY: number | null = null;
+    private wrapper: HTMLElement | null = null;
 
     private SNAP_DURATION = 1.7;
 
@@ -159,6 +160,14 @@ class ScrollManager {
         t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
 
     private readonly ALIGN_EASING = (t: number) => 1 - Math.pow(1 - t, 2);
+
+    private get viewportHeight() {
+        return this.wrapper?.clientHeight || window.innerHeight;
+    }
+
+    private get viewportWidth() {
+        return this.wrapper?.clientWidth || window.innerWidth;
+    }
 
     private emit() {
         this.listeners.forEach((listener) => {
@@ -190,9 +199,24 @@ class ScrollManager {
             return;
         }
 
+        const wrapper = document.getElementById("scroll-container");
+        const content = document.getElementById("scroll-content");
+
+        if (!wrapper || !content) {
+            console.error(
+                "ScrollManager: #scroll-container or #scroll-content not found",
+            );
+            return;
+        }
+
+        this.wrapper = wrapper;
+
         deviceManager.init();
 
         this.lenis = new Lenis({
+            wrapper,
+            content,
+            eventsTarget: window,
             autoRaf: true,
         });
 
@@ -223,9 +247,7 @@ class ScrollManager {
         this.updateViewport();
 
         this.collectSections();
-
         this.collectScrollBlocks();
-
         this.updateBlockStates();
 
         requestAnimationFrame(() => {
@@ -236,13 +258,9 @@ class ScrollManager {
             this.lenis.resize();
 
             this.collectSections();
-
             this.updateViewport();
-
             this.updateElements();
-
             this.updateBlockStates();
-
             this.emit();
         });
 
@@ -293,6 +311,7 @@ class ScrollManager {
         this.touchStartY = 0;
 
         this.touchLastY = 0;
+        this.wrapper = null;
 
         this.previousScrollY = 0;
 
@@ -355,15 +374,23 @@ class ScrollManager {
     }
 
     private collectSections() {
-        this.sections = Array.from(
-            document.querySelectorAll("[data-scroll-section]"),
-        ) as HTMLElement[];
+        this.sections = this.wrapper
+            ? Array.from(
+                  this.wrapper.querySelectorAll<HTMLElement>(
+                      "[data-scroll-section]",
+                  ),
+              )
+            : [];
     }
 
     private collectScrollBlocks() {
-        this.scrollBlocks = Array.from(
-            document.querySelectorAll("[data-scroll-block]"),
-        ) as HTMLElement[];
+        this.scrollBlocks = this.wrapper
+            ? Array.from(
+                  this.wrapper.querySelectorAll<HTMLElement>(
+                      "[data-scroll-block]",
+                  ),
+              )
+            : [];
     }
 
     private updateBlockStates() {
@@ -429,7 +456,7 @@ class ScrollManager {
     };
 
     private getActiveSectionIndex() {
-        const viewportCenter = window.innerHeight / 2;
+        const viewportCenter = this.viewportHeight / 2;
 
         let activeIndex = 0;
 
@@ -445,7 +472,7 @@ class ScrollManager {
     }
 
     private getCurrentSectionIndex() {
-        const viewportCenter = window.innerHeight / 2;
+        const viewportCenter = this.viewportHeight / 2;
 
         for (let index = 0; index < this.sections.length; index++) {
             const rect = this.sections[index].getBoundingClientRect();
@@ -459,7 +486,7 @@ class ScrollManager {
     }
 
     private isSectionVisible() {
-        const viewportHeight = window.innerHeight;
+        const viewportHeight = this.viewportHeight;
 
         return this.sections.some((section) => {
             const rect = section.getBoundingClientRect();
@@ -491,7 +518,7 @@ class ScrollManager {
     private isAtUncontrolledBoundary(section: HTMLElement, direction: 1 | -1) {
         const rect = section.getBoundingClientRect();
 
-        const viewportHeight = window.innerHeight;
+        const viewportHeight = this.viewportHeight;
 
         if (direction === -1) {
             return Math.abs(rect.top) <= this.ALIGN_EPSILON;
@@ -524,7 +551,7 @@ class ScrollManager {
 
         const rect = current.getBoundingClientRect();
 
-        const viewportHeight = window.innerHeight;
+        const viewportHeight = this.viewportHeight;
 
         const scrollY = this.lenis.scroll;
 
@@ -635,7 +662,7 @@ class ScrollManager {
             const rect = target.getBoundingClientRect();
 
             const targetY =
-                this.lenis.scroll + rect.bottom - window.innerHeight;
+                this.lenis.scroll + rect.bottom - this.viewportHeight;
 
             return {
                 target: Math.min(Math.max(targetY, 0), this.lenis.limit),
@@ -955,8 +982,8 @@ class ScrollManager {
             velocity: event.velocity,
             direction,
             limit: event.limit,
-            viewportHeight: window.innerHeight,
-            viewportWidth: window.innerWidth,
+            viewportHeight: this.viewportHeight,
+            viewportWidth: this.viewportWidth,
         };
 
         this.updateElements();
@@ -991,7 +1018,7 @@ class ScrollManager {
     };
 
     private getBlockAnimationFrame() {
-        const viewportHeight = window.innerHeight;
+        const viewportHeight = this.viewportHeight;
 
         const viewportCenter = viewportHeight / 2;
 
@@ -1068,7 +1095,7 @@ class ScrollManager {
     private calculateElementState(element: HTMLElement): ElementScrollState {
         const rect = element.getBoundingClientRect();
 
-        const viewportHeight = window.innerHeight;
+        const viewportHeight = this.viewportHeight;
 
         const height = rect.height;
 
@@ -1144,7 +1171,7 @@ class ScrollManager {
     } {
         const rect = element.getBoundingClientRect();
 
-        const viewportHeight = window.innerHeight;
+        const viewportHeight = this.viewportHeight;
 
         const height = rect.height;
 
@@ -1244,20 +1271,14 @@ class ScrollManager {
 
         this.scrollState = {
             ...this.scrollState,
-
-            viewportHeight: window.innerHeight,
-
-            viewportWidth: window.innerWidth,
-
+            viewportHeight: this.viewportHeight,
+            viewportWidth: this.viewportWidth,
             limit: this.lenis.limit,
         };
 
         this.collectScrollBlocks();
-
         this.updateElements();
-
         this.updateBlockStates();
-
         this.emit();
     }
 

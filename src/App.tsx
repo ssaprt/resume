@@ -1,6 +1,6 @@
 import { Canvas } from "@react-three/fiber";
 import { motion } from "framer-motion";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import ControlScrollSection from "./components/Sections/ControlScrollSection";
 import { UnControlScrollSection } from "./components/Sections/UnControlScrollSection";
@@ -11,6 +11,8 @@ import { ForthBlock } from "./ForthBlock/ForthBlock";
 import { GlitchTransition } from "./GlitchTransition";
 import { Loader } from "./Loader/Loader";
 import { Menu } from "./Menu/Menu";
+import { initScroll } from "./scroll/initScroll";
+import { scrollManager } from "./scroll/ScrollManager";
 import { SecondBlock } from "./SecondBlock/SecondBlock";
 import { ModelBatchPreloader } from "./shared/AssetLoader/ModelBatchPreloader";
 import { useAssetReady } from "./shared/AssetLoader/useAssetReady";
@@ -21,6 +23,14 @@ function App() {
     const isAssetReady = useAssetReady();
 
     const [modelsPreloaded, setModelsPreloaded] = useState(false);
+
+    useEffect(() => {
+        initScroll();
+
+        return () => {
+            scrollManager.destroy();
+        };
+    }, []);
 
     const handlePreloadComplete = useCallback(() => {
         setModelsPreloaded(true);
@@ -50,8 +60,38 @@ function App() {
                 </Canvas>
             )}
 
-            <Loader />
+            <div id="scroll-container">
+                <div id="scroll-content">
+                    {modelsPreloaded && (
+                        <main className="relative w-full">
+                            <ControlScrollSection id="1">
+                                <FirstBlock />
+                            </ControlScrollSection>
 
+                            <ControlScrollSection id="2">
+                                <SecondBlock />
+                            </ControlScrollSection>
+
+                            <UnControlScrollSection id="3">
+                                <ThridBlock />
+                            </UnControlScrollSection>
+
+                            <UnControlScrollSection
+                                id="4"
+                                style={{ zIndex: 2 }}
+                            >
+                                <ForthBlock />
+                            </UnControlScrollSection>
+
+                            <ControlScrollSection id="5" className="z-1">
+                                <FiveBlock />
+                            </ControlScrollSection>
+                        </main>
+                    )}
+                </div>
+            </div>
+
+            <Loader />
             <GlitchTransition active={isAssetReady} />
 
             <DotGrid
@@ -71,30 +111,6 @@ function App() {
 
             <TopRight />
             <Menu />
-
-            {modelsPreloaded && (
-                <div className="relative w-full">
-                    <ControlScrollSection id="1">
-                        <FirstBlock />
-                    </ControlScrollSection>
-
-                    <ControlScrollSection id="2">
-                        <SecondBlock />
-                    </ControlScrollSection>
-
-                    <UnControlScrollSection id="3">
-                        <ThridBlock />
-                    </UnControlScrollSection>
-
-                    <UnControlScrollSection id="4" style={{ zIndex: 2 }}>
-                        <ForthBlock />
-                    </UnControlScrollSection>
-
-                    <ControlScrollSection id="5" className="z-1">
-                        <FiveBlock />
-                    </ControlScrollSection>
-                </div>
-            )}
 
             <motion.div
                 className="pointer-events-none fixed inset-0 z-[9999]"
