@@ -5,19 +5,7 @@ export type CollectionItem = {
     src: string;
 };
 
-const collection: CollectionItem[] = [
-    {
-        name: "Two Peters",
-        src: "/images/two-peters.png",
-    },
-    { name: "Utility Lab", src: "/images/utility-lab.png" },
-    { name: "Radio", src: "/images/radio.png" },
-];
-
-export const CurrentSlideProject = ({ index }: { index: number }) => {
-    //eslint-disable-next-line
-    const project = collection[index] ?? collection[0];
-
+export const CurrentSlideProject = () => {
     return (
         <div className="grid grid-cols-2 gap-8 w-full h-full min-h-screen">
             <TopIndentShape
