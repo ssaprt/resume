@@ -74,12 +74,12 @@ export const Top = () => {
             justify-center
             "
         >
-            <span className="text-alter-fg select-none">#</span>
+            <span className="text-curr select-none">#</span>
 
             {isDesktop && (
                 <div
                     data-cursor="button"
-                    data-color="alter-foreground"
+                    data-color="curr"
                     onMouseEnter={() => setHovered(true)}
                     onMouseLeave={() => setHovered(false)}
                     className="
@@ -126,7 +126,7 @@ export const Top = () => {
                         return (
                             <span
                                 data-cursor="button"
-                                data-color="alter-foreground"
+                                data-color="curr"
                                 key={i}
                                 onClick={() => scrollManager.scrollToSection(i)}
                                 className={`
@@ -144,14 +144,14 @@ export const Top = () => {
                                     py-1
                                     pb-[6px]
                                     text-center
-                                    bg-alter-fg/10
+                                    bg-curr/10
                                     shadow-[0_0_1px_1px]
-                                    shadow-alter-fg
+                                    shadow-curr
                                     
                                     ${
                                         isActive
-                                            ? "text-alter-fg"
-                                            : "text-alter-fg hover:text-alter-fg/90"
+                                            ? "text-curr"
+                                            : "text-curr hover:text-curr/90"
                                     }
                                 `}
                                 style={{

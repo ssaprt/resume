@@ -1,28 +1,24 @@
-import { Canvas } from "@react-three/fiber";
 import { motion } from "framer-motion";
 
-import { Suspense } from "react";
-import { Item3D } from "../components/3D/Item3D";
-import { useScrollElement } from "../scroll/useScroll";
-import { Asset } from "../shared/AssetLoader/Asset";
-import { AssetReady } from "../shared/AssetLoader/AssetReady";
+import { ThreeModelView } from "../components/3D/ThreeModelView";
 
-export const Flip = () => {
-    const { ref, bottom } = useScrollElement();
-
+export const Flip = ({ bottom }: { bottom: number }) => {
     const rotationZ = bottom * Math.PI;
 
     return (
         <motion.div
             data-cursor="move"
-            data-color="alter-foreground"
-            ref={(element) => ref(element?.parentNode as HTMLElement)}
+            data-color="foreground"
+            data-shadow="0 0 0"
             className="
                 relative
                 flex
                 flex-row
                 items-center
-                w-2/3 md:w-1/3
+                w-6/8
+                max-w-[340px]
+                lg:max-w-full
+                lg:w-1/3
                 h-auto
                 aspect-square
                 justify-center
@@ -41,26 +37,20 @@ export const Flip = () => {
             overflow-visible
             rounded-full"
             >
-                <Canvas
-                    className="absolute! inset-0! w-full! h-full!"
-                    camera={{
-                        position: [10, 0, 0],
-                        fov: 12,
-                    }}
-                >
-                    <Asset name="two">
-                        <Suspense fallback={null}>
-                            <Item3D
-                                rotationZ={rotationZ}
-                                autorotate
-                                autorotateSpeed={15}
-                                returnSpeed={1}
-                                path="/two.glb"
-                            />
-                            <AssetReady name="two" />
-                        </Suspense>
-                    </Asset>
-                </Canvas>
+                <div className="absolute! inset-0! w-full! h-full!">
+                    <ThreeModelView
+                        returnSpeed={1}
+                        assetName="two"
+                        path="/two.glb"
+                        autorotate
+                        autorotateSpeed={15}
+                        rotationZ={rotationZ}
+                        camera={{
+                            position: [10, 0, 0],
+                            fov: 12,
+                        }}
+                    />
+                </div>
             </div>
         </motion.div>
     );

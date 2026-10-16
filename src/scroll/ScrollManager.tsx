@@ -125,6 +125,23 @@ class ScrollManager {
 
     private sections: HTMLElement[] = [];
 
+    // sections / blocks are re-collected only after the DOM structure changed
+    private structureObserver: MutationObserver | null = null;
+
+    private structureDirty = true;
+
+    // layout reads are shared within one synchronous task and dropped right
+    // after it (microtask), so nothing stale survives into the next event/frame
+    private rectCache = new Map<HTMLElement, DOMRect>();
+
+    private viewportHeightCache: number | null = null;
+
+    private viewportWidthCache: number | null = null;
+
+    private cacheResetScheduled = false;
+
+    private blocksRefreshed = false;
+
     private isControlAnimating = false;
 
     private wheelConsumed = false;
@@ -134,6 +151,7 @@ class ScrollManager {
     private touchStartY = 0;
 
     private touchLastY = 0;
+    private touchSessionId = 0;
 
     private touchConsumed = false;
 
@@ -144,15 +162,13 @@ class ScrollManager {
     private alignedUncontrolledY: number | null = null;
     private wrapper: HTMLElement | null = null;
 
-    private SNAP_DURATION = 1.7;
+    private SNAP_DURATION = 333;
 
     private readonly ALIGN_DURATION = 0.6;
 
     private readonly WHEEL_THRESHOLD = 2;
 
-    private readonly TOUCH_THRESHOLD = 50;
-
-    private readonly ALIGN_EPSILON = 2;
+    private readonly TOUCH_THRESHOLD = 0;
 
     private readonly MAGNET_DISTANCE = 20;
 
@@ -162,11 +178,90 @@ class ScrollManager {
     private readonly ALIGN_EASING = (t: number) => 1 - Math.pow(1 - t, 2);
 
     private get viewportHeight() {
-        return this.wrapper?.clientHeight || window.innerHeight;
+        if (this.viewportHeightCache === null) {
+            this.viewportHeightCache =
+                this.wrapper?.clientHeight || window.innerHeight;
+
+            this.scheduleCacheReset();
+        }
+
+        return this.viewportHeightCache;
     }
 
     private get viewportWidth() {
-        return this.wrapper?.clientWidth || window.innerWidth;
+        if (this.viewportWidthCache === null) {
+            this.viewportWidthCache =
+                this.wrapper?.clientWidth || window.innerWidth;
+
+            this.scheduleCacheReset();
+        }
+
+        return this.viewportWidthCache;
+    }
+
+    private getRect(element: HTMLElement) {
+        let rect = this.rectCache.get(element);
+
+        if (!rect) {
+            rect = element.getBoundingClientRect();
+
+            this.rectCache.set(element, rect);
+
+            this.scheduleCacheReset();
+        }
+
+        return rect;
+    }
+
+    private scheduleCacheReset() {
+        if (this.cacheResetScheduled) {
+            return;
+        }
+
+        this.cacheResetScheduled = true;
+
+        queueMicrotask(this.invalidateCache);
+    }
+
+    private invalidateCache = () => {
+        this.rectCache.clear();
+
+        this.viewportHeightCache = null;
+
+        this.viewportWidthCache = null;
+
+        this.blocksRefreshed = false;
+
+        this.cacheResetScheduled = false;
+    };
+
+    private markStructureDirty = () => {
+        this.structureDirty = true;
+    };
+
+    // takeRecords() makes pending DOM changes visible synchronously, so a
+    // layout effect that runs right after a commit still sees new sections
+    private syncStructure() {
+        if (
+            this.structureObserver &&
+            this.structureObserver.takeRecords().length > 0
+        ) {
+            this.structureDirty = true;
+        }
+
+        if (!this.structureDirty) {
+            return false;
+        }
+
+        this.structureDirty = false;
+
+        this.invalidateCache();
+
+        this.collectSections();
+
+        this.collectScrollBlocks();
+
+        return true;
     }
 
     private emit() {
@@ -186,8 +281,8 @@ class ScrollManager {
 
     private scheduleSectionsCollect() {
         requestAnimationFrame(() => {
-            this.collectSections();
-            this.collectScrollBlocks();
+            this.markStructureDirty();
+            this.syncStructure();
             this.updateElements();
             this.updateBlockStates();
             this.emit();
@@ -211,6 +306,9 @@ class ScrollManager {
 
         this.wrapper = wrapper;
 
+        // anything cached before the wrapper was known (viewport size) is void
+        this.invalidateCache();
+
         deviceManager.init();
 
         this.lenis = new Lenis({
@@ -218,6 +316,10 @@ class ScrollManager {
             content,
             eventsTarget: window,
             autoRaf: true,
+            overscroll: false,
+            syncTouch: true,
+            syncTouchLerp: 0.075,
+            touchInertiaExponent: 1.7,
         });
 
         this.lenis.on("scroll", this.handleScroll);
@@ -244,11 +346,18 @@ class ScrollManager {
             capture: true,
         });
 
-        this.updateViewport();
+        this.structureObserver = new MutationObserver(this.markStructureDirty);
 
-        this.collectSections();
-        this.collectScrollBlocks();
-        this.updateBlockStates();
+        this.structureObserver.observe(wrapper, {
+            childList: true,
+            subtree: true,
+            attributes: true,
+            attributeFilter: ["data-scroll-section", "data-scroll-block"],
+        });
+
+        this.markStructureDirty();
+
+        this.updateViewport();
 
         requestAnimationFrame(() => {
             if (!this.lenis) {
@@ -257,11 +366,9 @@ class ScrollManager {
 
             this.lenis.resize();
 
-            this.collectSections();
+            this.markStructureDirty();
+
             this.updateViewport();
-            this.updateElements();
-            this.updateBlockStates();
-            this.emit();
         });
 
         this.scheduleSectionsCollect();
@@ -289,6 +396,14 @@ class ScrollManager {
         deviceManager.destroy();
 
         this.lenis = null;
+
+        this.structureObserver?.disconnect();
+
+        this.structureObserver = null;
+
+        this.structureDirty = true;
+
+        this.invalidateCache();
 
         this.listeners.clear();
 
@@ -344,7 +459,13 @@ class ScrollManager {
     }
 
     unregisterElement(element: HTMLElement) {
-        this.elements.delete(element);
+        const item = this.elements.get(element);
+
+        // several hooks may observe the same element: drop it only when the
+        // last subscriber is gone, otherwise the others would stop updating
+        if (item && item.listeners.size === 0) {
+            this.elements.delete(element);
+        }
     }
 
     getElementState(element: HTMLElement | null) {
@@ -394,61 +515,31 @@ class ScrollManager {
     }
 
     private updateBlockStates() {
-        const direction =
+        this.syncStructure();
+
+        if (this.scrollBlocks.length === 0) {
+            // keep the same array so useScrollBlocks consumers are not woken up
+            if (this.blockStates.length > 0) {
+                this.blockStates = [];
+            }
+
+            return;
+        }
+
+        const direction: 1 | -1 =
             this.scrollState.direction === 0 ? 1 : this.scrollState.direction;
 
         const { anchorIndex, phase } = this.getBlockAnimationFrame();
 
-        this.blockStates = this.scrollBlocks.map((element, block) => {
-            const state = this.calculateBlockState(
+        this.blockStates = this.scrollBlocks.map((element, block) =>
+            this.calculateBlockState(
                 element,
                 block,
                 anchorIndex,
                 phase,
-            );
-
-            return {
-                block,
-
-                controlled: isControlled(element),
-
-                visible: state.visible,
-
-                intersection: state.intersection,
-
-                progress: state.progress,
-
                 direction,
-
-                top: state.top,
-
-                bottom: state.bottom,
-
-                animationTop: state.animationTop,
-
-                animationBottom: state.animationBottom,
-
-                center: state.center,
-
-                topProgress: state.topProgress,
-
-                bottomProgress: state.bottomProgress,
-
-                enterProgress: state.enterProgress,
-
-                leaveProgress: state.leaveProgress,
-
-                isAbove: state.isAbove,
-
-                isBelow: state.isBelow,
-
-                isEntering: state.isEntering,
-
-                isCenter: state.isCenter,
-
-                isLeaving: state.isLeaving,
-            };
-        });
+            ),
+        );
     }
 
     getBlockStates = () => {
@@ -461,7 +552,7 @@ class ScrollManager {
         let activeIndex = 0;
 
         for (let index = 0; index < this.sections.length; index++) {
-            const rect = this.sections[index].getBoundingClientRect();
+            const rect = this.getRect(this.sections[index]);
 
             if (rect.top <= viewportCenter) {
                 activeIndex = index;
@@ -475,7 +566,7 @@ class ScrollManager {
         const viewportCenter = this.viewportHeight / 2;
 
         for (let index = 0; index < this.sections.length; index++) {
-            const rect = this.sections[index].getBoundingClientRect();
+            const rect = this.getRect(this.sections[index]);
 
             if (rect.top <= viewportCenter && rect.bottom >= viewportCenter) {
                 return index;
@@ -489,7 +580,7 @@ class ScrollManager {
         const viewportHeight = this.viewportHeight;
 
         return this.sections.some((section) => {
-            const rect = section.getBoundingClientRect();
+            const rect = this.getRect(section);
 
             return rect.bottom > 0 && rect.top < viewportHeight;
         });
@@ -516,15 +607,15 @@ class ScrollManager {
     }
 
     private isAtUncontrolledBoundary(section: HTMLElement, direction: 1 | -1) {
-        const rect = section.getBoundingClientRect();
-
+        const rect = this.getRect(section);
         const viewportHeight = this.viewportHeight;
+        const epsilon = 8;
 
         if (direction === -1) {
-            return Math.abs(rect.top) <= this.ALIGN_EPSILON;
+            return Math.abs(rect.top) <= epsilon;
         }
 
-        return Math.abs(rect.bottom - viewportHeight) <= this.ALIGN_EPSILON;
+        return Math.abs(rect.bottom - viewportHeight) <= epsilon;
     }
 
     private tryProtectUncontrolledBoundary(
@@ -549,7 +640,7 @@ class ScrollManager {
             return false;
         }
 
-        const rect = current.getBoundingClientRect();
+        const rect = this.getRect(current);
 
         const viewportHeight = this.viewportHeight;
 
@@ -565,7 +656,14 @@ class ScrollManager {
                 ? boundaryY + this.UNCONTROLLED_GUARD_DISTANCE
                 : boundaryY - this.UNCONTROLLED_GUARD_DISTANCE;
 
-        const atBoundary = Math.abs(scrollY - boundaryY) <= this.ALIGN_EPSILON;
+        if (
+            this.alignedUncontrolledSection === current &&
+            this.alignedUncontrolledDirection === direction
+        ) {
+            return false;
+        }
+
+        const atBoundary = this.isAtUncontrolledBoundary(current, direction);
 
         if (atBoundary) {
             this.markUncontrolledAligned(current, direction, boundaryY);
@@ -616,13 +714,13 @@ class ScrollManager {
         target: ScrollTarget;
         duration: number;
     } | null {
-        this.collectSections();
+        this.syncStructure();
 
         if (!this.lenis) {
             return null;
         }
 
-        const activeIndex = this.getActiveSectionIndex();
+        const activeIndex = this.getCurrentSectionIndex();
 
         const current = this.sections[activeIndex];
 
@@ -639,19 +737,23 @@ class ScrollManager {
         if (!currentControlled && targetControlled) {
             const aligned =
                 this.alignedUncontrolledSection === current &&
-                this.alignedUncontrolledDirection === direction &&
-                this.isAtUncontrolledBoundary(current, direction);
+                this.alignedUncontrolledDirection === direction;
 
-            if (aligned) {
-                this.clearUncontrolledAlignment();
+            const atBoundary = this.isAtUncontrolledBoundary(
+                current,
+                direction,
+            );
 
-                return {
-                    target,
-                    duration: this.SNAP_DURATION,
-                };
+            if (!aligned && !atBoundary) {
+                return null;
             }
 
-            return null;
+            this.clearUncontrolledAlignment();
+
+            return {
+                target,
+                duration: this.SNAP_DURATION,
+            };
         }
 
         if (!currentControlled && !targetControlled) {
@@ -659,7 +761,7 @@ class ScrollManager {
         }
 
         if (currentControlled && !targetControlled && direction === -1) {
-            const rect = target.getBoundingClientRect();
+            const rect = this.getRect(target);
 
             const targetY =
                 this.lenis.scroll + rect.bottom - this.viewportHeight;
@@ -681,7 +783,7 @@ class ScrollManager {
             return;
         }
 
-        this.collectSections();
+        this.syncStructure();
 
         const section = this.sections[index];
 
@@ -703,6 +805,7 @@ class ScrollManager {
         if (!this.lenis || this.isControlAnimating) {
             return;
         }
+        const touchSessionId = this.touchSessionId;
 
         this.isControlAnimating = true;
 
@@ -722,7 +825,9 @@ class ScrollManager {
                     requestAnimationFrame(() => {
                         this.isControlAnimating = false;
 
-                        this.touchConsumed = this.touchActive;
+                        if (this.touchSessionId === touchSessionId) {
+                            this.touchConsumed = this.touchActive;
+                        }
 
                         window.setTimeout(() => {
                             this.wheelConsumed = false;
@@ -731,6 +836,9 @@ class ScrollManager {
                 });
             },
         });
+
+        // scrollTo may move the scroll position: never reuse rects read before it
+        this.invalidateCache();
     }
 
     private snapToNearControlSection(direction: -1 | 0 | 1) {
@@ -743,7 +851,7 @@ class ScrollManager {
                 continue;
             }
 
-            const top = section.getBoundingClientRect().top;
+            const top = this.getRect(section).top;
 
             const isApproachingDown =
                 direction === 1 && top > 0 && top < this.MAGNET_DISTANCE;
@@ -768,9 +876,7 @@ class ScrollManager {
             return;
         }
 
-        if (!this.sections.length) {
-            this.collectSections();
-        }
+        this.syncStructure();
 
         if (!this.sections.length) {
             return;
@@ -831,7 +937,7 @@ class ScrollManager {
             return;
         }
 
-        this.collectSections();
+        this.syncStructure();
 
         if (!this.sections.length) {
             return;
@@ -841,6 +947,7 @@ class ScrollManager {
             return;
         }
 
+        this.touchSessionId += 1;
         this.touchActive = true;
 
         this.touchStartY = event.touches[0].clientY;
@@ -851,11 +958,7 @@ class ScrollManager {
     };
 
     private handleTouchMove = (event: TouchEvent) => {
-        if (!event.touches.length) {
-            return;
-        }
-
-        if (!this.sections.length) {
+        if (!event.touches.length || !this.sections.length) {
             return;
         }
 
@@ -868,6 +971,8 @@ class ScrollManager {
                 event.preventDefault();
             }
 
+            event.stopImmediatePropagation();
+
             return;
         }
 
@@ -878,6 +983,21 @@ class ScrollManager {
         const stepDelta = this.touchLastY - currentY;
 
         this.touchLastY = currentY;
+
+        const currentIndex = this.getCurrentSectionIndex();
+
+        const currentSection = this.sections[currentIndex];
+
+        const currentControlled =
+            currentSection !== undefined && isControlled(currentSection);
+
+        if (currentControlled) {
+            if (event.cancelable) {
+                event.preventDefault();
+            }
+
+            event.stopImmediatePropagation();
+        }
 
         if (Math.abs(totalDelta) < this.TOUCH_THRESHOLD) {
             return;
@@ -899,6 +1019,8 @@ class ScrollManager {
                 event.preventDefault();
             }
 
+            event.stopImmediatePropagation();
+
             this.touchConsumed = true;
 
             return;
@@ -914,6 +1036,8 @@ class ScrollManager {
             event.preventDefault();
         }
 
+        event.stopImmediatePropagation();
+
         this.touchConsumed = true;
 
         this.snapTo(move.target, move.duration);
@@ -921,11 +1045,8 @@ class ScrollManager {
 
     private handleTouchEnd = () => {
         this.touchActive = false;
-
         this.touchStartY = 0;
-
         this.touchLastY = 0;
-
         this.touchConsumed = false;
     };
 
@@ -936,6 +1057,8 @@ class ScrollManager {
 
     //eslint-disable-next-line
     private handleScroll = (event: any) => {
+        this.syncStructure();
+
         const currentScrollY = event.animatedScroll;
 
         const direction: -1 | 0 | 1 =
@@ -945,10 +1068,14 @@ class ScrollManager {
                   ? -1
                   : 0;
 
-        if (this.alignedUncontrolledY !== null && !this.isControlAnimating) {
+        if (
+            this.alignedUncontrolledY !== null &&
+            !this.isControlAnimating &&
+            !this.touchActive
+        ) {
             if (
                 Math.abs(currentScrollY - this.alignedUncontrolledY) >
-                this.ALIGN_EPSILON
+                this.UNCONTROLLED_GUARD_DISTANCE
             ) {
                 this.clearUncontrolledAlignment();
             }
@@ -1010,7 +1137,17 @@ class ScrollManager {
     }
 
     refreshBlocks = () => {
-        this.collectScrollBlocks();
+        const recollected = this.syncStructure();
+
+        // every useScrollBlock* hook calls this on mount; within one commit the
+        // result is identical, so only the first call does the work
+        if (!recollected && this.blocksRefreshed) {
+            return;
+        }
+
+        this.blocksRefreshed = true;
+
+        this.scheduleCacheReset();
 
         this.updateBlockStates();
 
@@ -1027,7 +1164,7 @@ class ScrollManager {
         let smallestDistance = Infinity;
 
         this.scrollBlocks.forEach((element, index) => {
-            const rect = element.getBoundingClientRect();
+            const rect = this.getRect(element);
 
             const containsCenter =
                 rect.top <= viewportCenter && rect.bottom >= viewportCenter;
@@ -1056,8 +1193,7 @@ class ScrollManager {
             };
         }
 
-        const anchorRect =
-            this.scrollBlocks[anchorIndex].getBoundingClientRect();
+        const anchorRect = this.getRect(this.scrollBlocks[anchorIndex]);
 
         const top = anchorRect.top / viewportHeight;
 
@@ -1093,7 +1229,7 @@ class ScrollManager {
     }
 
     private calculateElementState(element: HTMLElement): ElementScrollState {
-        const rect = element.getBoundingClientRect();
+        const rect = this.getRect(element);
 
         const viewportHeight = this.viewportHeight;
 
@@ -1162,14 +1298,12 @@ class ScrollManager {
 
     private calculateBlockState(
         element: HTMLElement,
-        index: number,
+        block: number,
         anchorIndex: number,
         phase: number,
-    ): ElementScrollState & {
-        animationTop: number;
-        animationBottom: number;
-    } {
-        const rect = element.getBoundingClientRect();
+        direction: 1 | -1,
+    ): BlockScrollState {
+        const rect = this.getRect(element);
 
         const viewportHeight = this.viewportHeight;
 
@@ -1188,7 +1322,7 @@ class ScrollManager {
         const visible = visibleHeight > 0;
 
         const { top: animationTop, bottom: animationBottom } =
-            this.calculateBlockAnimationBounds(index, anchorIndex, phase);
+            this.calculateBlockAnimationBounds(block, anchorIndex, phase);
 
         const intersection = clamp(
             Math.min(animationBottom, 1) - Math.max(animationTop, 0),
@@ -1219,9 +1353,14 @@ class ScrollManager {
             rect.top <= viewportHeight / 2 && rect.bottom >= viewportHeight / 2;
 
         return {
+            block,
+
+            controlled: isControlled(element),
+
             visible,
             intersection,
             progress,
+            direction,
 
             top,
             bottom,
@@ -1276,16 +1415,16 @@ class ScrollManager {
             limit: this.lenis.limit,
         };
 
-        this.collectScrollBlocks();
+        this.syncStructure();
         this.updateElements();
         this.updateBlockStates();
         this.emit();
     }
 
     private handleResize = () => {
-        this.lenis?.resize();
+        this.invalidateCache();
 
-        this.collectSections();
+        this.lenis?.resize();
 
         this.updateViewport();
     };

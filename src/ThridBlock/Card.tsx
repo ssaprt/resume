@@ -1,9 +1,6 @@
-import { Canvas } from "@react-three/fiber";
 import { motion } from "framer-motion";
-import { Suspense, useLayoutEffect, useRef, useState } from "react";
-import { Item3D } from "../components/3D/Item3D";
-import { Asset } from "../shared/AssetLoader/Asset";
-import { AssetReady } from "../shared/AssetLoader/AssetReady";
+import { useLayoutEffect, useRef, useState } from "react";
+import { ThreeModelView } from "../components/3D/ThreeModelView";
 import { types } from "./config";
 import { Tilt } from "./Tilt";
 import { useThridBlockContext } from "./useThridBlockContext";
@@ -263,27 +260,18 @@ export const Card = ({
                     </div>
 
                     <div className="row-center-0 justify-center w-full aspect-square overflow-hidden z-5">
-                        <Canvas
-                            className="relative touch-none"
+                        <ThreeModelView
+                            assetName={name}
+                            path={`/${name}.glb`}
+                            autorotate
+                            autorotateSpeed={15}
+                            returnSpeed={1}
+                            rotationZ={0}
                             camera={{
-                                position: [14, 0, 0],
-                                fov: 22,
+                                position: [10, 0, 0],
+                                fov: 24,
                             }}
-                        >
-                            <Asset name={name}>
-                                <Suspense fallback={null}>
-                                    <Item3D
-                                        sceneRotationY={0}
-                                        autorotate
-                                        autorotateSpeed={15}
-                                        returnSpeed={1}
-                                        path={`/${name}.glb`}
-                                    />
-
-                                    <AssetReady name={name} />
-                                </Suspense>
-                            </Asset>
-                        </Canvas>
+                        />
                     </div>
 
                     <div className={`col-start-1 p-2`}>

@@ -155,7 +155,7 @@ const MenuBlock = ({
                         transition-colors
                         duration-600
                         ease-in-out
-                        ${active ? "bg-alter-fg/30" : "bg-fg/30"}
+                        ${active ? "bg-curr/30" : "bg-fg/30"}
                     `}
                     style={{
                         transform: `translateY(${translateY}%) scaleY(${scaleY})`,

@@ -1,6 +1,5 @@
 import { motion, useTransform } from "framer-motion";
 
-import SplitText from "../components/text/ScatterText";
 import { useDevice } from "../scroll/useDevice";
 import { useScrollElementMotion } from "../scroll/useScroll";
 import { SubLeft } from "./SubLeft";
@@ -17,40 +16,24 @@ export const Left = () => {
             -document.documentElement.clientHeight * direction * progress,
     );
 
-    const opacity = useTransform(leaveProgress, [0, 0.65], [1, 0]);
+    const opacity = useTransform(
+        leaveProgress,
+        [0, isMobile ? 0.1 : 0.5],
+        [1, 0],
+    );
+    const scale = useTransform(leaveProgress, [0, 0.1], [1, 0.8]);
+
     const x = useTransform(leaveProgress, [0, 1], [0, -500]);
 
     return isMobile ? (
         <motion.div
-            style={{ opacity }}
+            style={{ opacity, scale, y }}
             ref={(e) => ref(e?.parentNode as HTMLElement)}
             className="col-center-2 mt-10"
         >
-            <SplitText
-                text="DENYS UKHAN"
-                className="uppercase tracking-[0.1px] text-[9vw]! transform scale-y-200"
-                left={{
-                    x: 0,
-                    y: 10,
-                    rotate: 0,
-                    scale: 0,
-                    opacity: 0,
-                }}
-                right={{
-                    x: 0,
-                    y: 10,
-                    rotate: 0,
-                    scale: 0,
-                    opacity: 0,
-                }}
-                split={0.5}
-                stagger={0.05}
-                as="h1"
-                scroll={{
-                    leaveProgress,
-                    leaveDirection,
-                }}
-            />
+            <h1 className="transform scale-y-200 uppercase tracking-[0.1px] text-[9vw]!">
+                DENYS UKHAN
+            </h1>
             <div className="col-center-1">
                 <span>Location: Georgia, Batumi</span>
                 <div className="row-center-0">

@@ -3,6 +3,8 @@ import { motion, useTransform } from "framer-motion";
 import { useScrollElementMotion } from "../scroll/useScroll";
 
 import { useEffect, useState } from "react";
+import { CV } from "../FiveBlock/CV";
+import { useDevice } from "../scroll/useDevice";
 import { FixIt } from "./FixIt";
 import { SkillLetter } from "./SkillLetter";
 
@@ -21,6 +23,7 @@ const skillGroups = [
 ];
 
 export const Right = () => {
+    const { isMobile } = useDevice();
     const [replacedIcons, setReplacedIcons] = useState<Record<number, boolean>>(
         {},
     );
@@ -80,7 +83,11 @@ export const Right = () => {
 
     const x = useTransform(leaveProgress, [0, 1], [0, 500]);
 
-    return (
+    return isMobile ? (
+        <div ref={(e) => ref(e?.parentNode as HTMLElement)}>
+            <CV />
+        </div>
+    ) : (
         <motion.div
             style={{ y, opacity, x }}
             ref={(e) => ref(e?.parentNode as HTMLElement)}

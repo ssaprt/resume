@@ -421,9 +421,6 @@ export const Title = () => {
 
     const opacity = useTransform(leaveProgress, [0, 1], [1, 0]);
 
-    const rawW = useTransform(leaveProgress, [0, 1], [4, 10]);
-    const w = useMotionTemplate`${rawW}vw`;
-
     const rectWidth = Math.max((layout?.width ?? 0) - INSET * 2, 0);
     const rectHeight = Math.max((layout?.height ?? 0) - INSET * 2, 0);
     const radius = layout?.radius ?? BORDER_RADIUS;
@@ -445,11 +442,6 @@ export const Title = () => {
             <GoPrev />
 
             <motion.div className="row-center-4 w-full justify-center">
-                <motion.div
-                    className="h-[1px]! w-[40px] bg-gradient-to-r from-curr/80 to-transparent"
-                    style={{ width: w }}
-                />
-
                 <SplitText
                     text="Tech Stack"
                     className="relative shrink-0 text-nowrap text-curr/80 text-[32px]! font-raj!"
@@ -470,11 +462,6 @@ export const Title = () => {
                     stagger={0.15}
                     as="h1"
                     scroll={{ leaveProgress, leaveDirection }}
-                />
-
-                <motion.div
-                    className="h-[1px]! w-[40px] bg-gradient-to-r from-transparent to-curr/80"
-                    style={{ width: w }}
                 />
             </motion.div>
 
@@ -533,7 +520,7 @@ export const Title = () => {
                             height={rectHeight}
                             rx={radius}
                             fill="none"
-                            stroke="var(--color-nestjs)"
+                            stroke="var(--color-curr)"
                             strokeWidth={STROKE_WIDTH}
                             strokeLinecap="round"
                             strokeDasharray={hoverDashArray}
@@ -635,7 +622,7 @@ const Button = ({
             ref={buttonRef}
             style={{ filter }}
             data-cursor="button"
-            data-color={isActive ? "curr" : "nestjs"}
+            data-color={isActive ? "curr" : "curr"}
             onClick={() => onSelect(i)}
             onMouseEnter={() => onHover(i)}
             className={`
@@ -653,7 +640,7 @@ const Button = ({
                 ${
                     isActive
                         ? "bg-curr text-app!"
-                        : "text-curr hover:text-nestjs! hover:outline-nestjs"
+                        : "text-curr hover:text-curr! hover:outline-curr"
                 }
             `}
         >

@@ -1,12 +1,19 @@
 import { motion } from "framer-motion";
 import { scrollManager } from "../scroll/ScrollManager";
+import { useDevice } from "../scroll/useDevice";
 import { useScrollElement } from "../scroll/useScroll";
 import { useScrollTransform } from "../scroll/useScrollTransform";
 
 export const Bottom = () => {
     const { ref, bottom } = useScrollElement();
-
-    const opacity = useScrollTransform(bottom, [1, 0.85], [1, 0]);
+    const { isMobile } = useDevice();
+    const h = isMobile ? "h-14" : "h-20";
+    const bot = isMobile ? "bottom-5" : "bottom-5";
+    const opacity = useScrollTransform(
+        bottom,
+        [isMobile ? 0.7 : 1, isMobile ? 0.65 : 0.65],
+        [1, 0],
+    );
 
     return (
         <motion.div
@@ -15,29 +22,26 @@ export const Bottom = () => {
             onClick={() => scrollManager.scrollToSection(2)}
             style={{ opacity }}
             ref={(e) => ref(e?.parentNode as HTMLElement)}
-            className="
-                absolute
+            className={`absolute
                 w-40
-                h-20
+                ${h}
                 left-1/2
                 transform
                 -translate-x-1/2
-                bottom-5
-                cursor-pointer"
+                ${bot}
+                cursor-pointer`}
         >
             <div
-                className="
-               absolute
+                className={`absolute
                 w-[3px]
-                h-20
+                ${h}
                 left-1/2
                 transform
                 -translate-x-1/2
                 bottom-0
                 bg-alter-fg/10
                 
-                overflow-hidden
-            "
+                overflow-hidden`}
             >
                 <div
                     className="

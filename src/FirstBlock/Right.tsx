@@ -1,4 +1,5 @@
 import { motion, useTransform } from "framer-motion";
+import SplitText from "../components/text/ScatterText";
 import { useDevice } from "../scroll/useDevice";
 import { useScrollElementMotion } from "../scroll/useScroll";
 
@@ -6,30 +7,77 @@ const letters = "I`M A CREATIVE".split("");
 const letters2 = "FULLSTACK WEB DEVELOPER".split("");
 
 export const Right = () => {
-    const { isDesktop } = useDevice();
-    const { ref, leaveProgress } = useScrollElementMotion();
+    const { isDesktop, isMobile } = useDevice();
+    const { ref, leaveProgress, leaveDirection } = useScrollElementMotion();
 
     const y = useTransform(
         leaveProgress,
         (progress) => progress * document.documentElement.clientHeight,
     );
-    const opacity = useTransform(leaveProgress, [0, 0.5], [1, 0]);
+    const opacity = useTransform(
+        leaveProgress,
+        [0, isMobile ? 0.1 : 0.5],
+        [1, 0],
+    );
+
     const x = useTransform(leaveProgress, [0, 1], [0, 500]);
 
     return !isDesktop ? (
         <motion.div
-            style={{ y, opacity, x }}
+            style={{}}
             ref={(e) => ref(e?.parentNode as HTMLElement)}
             className="col-center-3 w-full mt-4
             "
         >
-            <h1 className="transform scale-y-200 uppercase tracking-[0.1px] text-[8vw]!">
-                I`M A CREATIVE
-            </h1>
+            <SplitText
+                text="I`M A CREATIVE"
+                className="transform scale-y-200 uppercase tracking-[0.1px] text-[8vw]!"
+                left={{
+                    x: -40,
+                    y: 30,
+                    rotate: 0,
+                    scale: 0,
+                    opacity: 0,
+                }}
+                right={{
+                    x: 40,
+                    y: 30,
+                    rotate: 0,
+                    scale: 0,
+                    opacity: 0,
+                }}
+                stagger={0.2}
+                as="h1"
+                scroll={{
+                    leaveProgress,
+                    leaveDirection,
+                }}
+            />
 
-            <h3 className={`transform scale-y-200 uppercase tracking-[0.4px]`}>
-                FULLSTACK WEB DEVELOPER
-            </h3>
+            <SplitText
+                text="FULLSTACK WEB DEVELOPER"
+                className="transform scale-y-200 uppercase tracking-[0.4px]"
+                left={{
+                    x: -40,
+                    y: 30,
+                    rotate: 0,
+                    scale: 0,
+                    opacity: 0,
+                }}
+                right={{
+                    x: 40,
+                    y: 30,
+                    rotate: 0,
+                    scale: 0,
+                    opacity: 0,
+                }}
+                stagger={0.2}
+                as="h3"
+                scroll={{
+                    leaveProgress,
+                    leaveDirection,
+                }}
+            />
         </motion.div>
     ) : (
         <motion.div
