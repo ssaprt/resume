@@ -26,9 +26,9 @@ export const ForthBlock = () => {
         [isMobile ? 0 : -60, 0],
     );
 
-    const p = isMobile ? "p-0" : "p-20";
+    const p = isMobile ? "p-0 pt-20" : "p-20";
     const text = isMobile ? "text-2xl!" : "text-4xl!";
-    const w = isMobile ? "w-full" : "w-2/3";
+    const w = isMobile ? "w-full mb-0" : "w-2/3 mb-6";
     const t = isMobile ? "mt-10" : "mt-0";
 
     return (
@@ -54,7 +54,7 @@ export const ForthBlock = () => {
                     </motion.h1>
                 </div>
 
-                <div className={`${w} mb-6`} ref={ref}>
+                <div className={`${w}`} ref={ref}>
                     {isMobile ? (
                         <h1
                             className={`text-center font-outfit! text-curr! ${text} opacity-80`}

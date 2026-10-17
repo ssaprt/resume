@@ -27,7 +27,7 @@ function App() {
 
     useEffect(() => {
         scrollManager.init();
-        scrollManager.snapDuration = isDesktop ? 1700 : 1300;
+        scrollManager.snapDuration = 1700;
 
         return () => {
             scrollManager.destroy();

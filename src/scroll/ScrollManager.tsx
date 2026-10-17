@@ -162,7 +162,7 @@ class ScrollManager {
     private alignedUncontrolledY: number | null = null;
     private wrapper: HTMLElement | null = null;
 
-    private SNAP_DURATION = 333;
+    private SNAP_DURATION = 1700;
 
     private readonly ALIGN_DURATION = 0.6;
 

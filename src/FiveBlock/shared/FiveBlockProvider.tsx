@@ -32,7 +32,7 @@ export const FiveBlockProvider = ({
     );
     const y = useTransform(leaveProgress, [0, 1], [0, isMobile ? 0 : 320]);
     const p = isMobile
-        ? "col-center-4 p-0"
+        ? "col-center-4 p-0 py-20"
         : "row-center-4 p-10 justify-center";
 
     return (

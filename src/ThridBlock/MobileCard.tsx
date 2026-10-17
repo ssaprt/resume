@@ -8,7 +8,7 @@ type Props = {
 };
 
 export const MobileCard = ({ children, className = "", color }: Props) => {
-    const bsh = `0px 0px 0px 1px var(--${color})`;
+    const bsh = `0px 0px 5px 1px var(--${color})`;
     return (
         <div
             className={`relative overflow-hidden p-2 ${className} before:content-['']

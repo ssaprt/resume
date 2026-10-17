@@ -101,11 +101,13 @@ export const PartOne = () => {
                     bg-app`}
                     >
                         <div className={`h-full min-w-0 w-full ${inner}`}>
-                            <div className="col-center-4">
-                                <div className="size-60 shrink-0">
-                                    <ControllerIconAuthor />
+                            {!isMobile && (
+                                <div className="col-center-4">
+                                    <div className="size-60 shrink-0">
+                                        <ControllerIconAuthor />
+                                    </div>
                                 </div>
-                            </div>
+                            )}
 
                             <div className="col-end-4 w-auto flex-1">
                                 <div className="col-start-1 min-w-0 flex-1">
