@@ -24,7 +24,7 @@ export const Left = () => {
 
     return isMobile ? (
         <motion.div
-            style={{ y, opacity }}
+            style={{ opacity }}
             ref={(e) => ref(e?.parentNode?.firstChild as HTMLElement)}
             className="w-full col-center-1 justify-center text-alter-fg mt-10"
         >

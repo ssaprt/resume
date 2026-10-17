@@ -1,4 +1,8 @@
+import { useDevice } from "../../scroll/useDevice";
+
 export const ProjectSpendTime = (item: { title: string; value: string }) => {
+    const { isMobile } = useDevice();
+    const text = isMobile ? "text-[10px]!" : "text-[12px]!";
     return (
         <div className="relative z-10 grid w-full grid-cols-[1fr_16px_1fr] items-center">
             <div className="flex min-w-0 items-center justify-end gap-2">
@@ -12,7 +16,7 @@ export const ProjectSpendTime = (item: { title: string; value: string }) => {
 
             <div className="flex min-w-0 items-center gap-2">
                 <div className="h-px min-w-2 flex-1 bg-gradient-to-r from-current/50 to-transparent" />
-                <span className="shrink-0 text-[12px]! uppercase">
+                <span className={`shrink-0 ${text} uppercase`}>
                     {item.value}
                 </span>
             </div>

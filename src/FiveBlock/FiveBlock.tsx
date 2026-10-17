@@ -7,6 +7,7 @@ export const FiveBlock = () => {
     return (
         <FiveBlockProvider>
             <PartOne />
+
             <PartTwo />
         </FiveBlockProvider>
     );

@@ -1,17 +1,23 @@
 import { motion } from "framer-motion";
 import { useTransform } from "motion/react";
+import { useDevice } from "../../scroll/useDevice";
 import { useScrollElementMotion } from "../../scroll/useScroll";
 import { Item } from "./Item";
 
 export const Items = () => {
     const { ref, enterProgress } = useScrollElementMotion();
+    const { isMobile } = useDevice();
 
-    const opacity = useTransform(enterProgress, [0.1, 0.1001], [0.5, 1]);
-    const y = useTransform(enterProgress, [0, 0.0001], [90, 0]);
+    const opacity = useTransform(
+        enterProgress,
+        [0.1, 0.1001],
+        [isMobile ? 1 : 0.5, 1],
+    );
+    const y = useTransform(enterProgress, [0, 0.0001], [isMobile ? 1 : 90, 0]);
     const pointerEvents = useTransform(
         enterProgress,
         [0, 0.0001],
-        ["none", "auto"],
+        [isMobile ? "auto" : "none", "auto"],
     );
     return (
         <motion.div
@@ -62,7 +68,7 @@ export const Items = () => {
                 title="Two-Peters"
                 src="/videos/two-peters.mp4"
                 srcMobile="/videos/two-peters-mobile.mp4"
-                colorName="curr"
+                colorName="two-peters"
                 colorGlass="rgba(38, 38, 38, .9)"
                 delay={600}
                 projectProps={[
@@ -110,7 +116,7 @@ export const Items = () => {
                 title="Utility-lab"
                 src="/videos/utility-lab.mp4"
                 srcMobile="/videos/utility-lab-mobile.mp4"
-                colorName="curr"
+                colorName="crm"
                 colorGlass="rgba(100, 116, 139, .9)"
                 delay={600}
                 projectProps={[
@@ -169,7 +175,7 @@ Order processing manager.`,
                 iconName="two-peters"
                 title="Business MS"
                 src="/videos/panel-two-peters.mp4"
-                colorName="curr"
+                colorName="two-peters"
                 colorGlass="rgba(0,0,0,.55)"
                 delay={600}
                 projectProps={[
@@ -254,7 +260,7 @@ It displays comprehensive information for each station, including the album, art
                 title="GMoon"
                 src="/videos/gmoon.mp4"
                 srcMobile="/videos/gmoon-mobile.mp4"
-                colorName="curr"
+                colorName="gmoon"
                 colorGlass="rgba(83, 222, 203, 0.543)"
                 delay={600}
                 projectProps={[
@@ -264,7 +270,12 @@ It displays comprehensive information for each station, including the album, art
                     { title: "Designer", value: "DENYS UKHAN" },
                     { title: "Backender", value: "DENYS UKHAN" },
                     { title: "Frontender", value: "DENYS UKHAN" },
-                    { title: "Budget", value: "1 percent of the profit" },
+                    {
+                        title: "Budget",
+                        value: isMobile
+                            ? "1 percent"
+                            : "1 percent of the profit",
+                    },
                 ]}
             />
 
@@ -295,7 +306,7 @@ Order processing manager.`,
                 title="Custom CRM"
                 src="/videos/crm.mp4"
                 srcMobile="/videos/crm-mobile.mp4"
-                colorName="curr"
+                colorName="crm"
                 colorGlass="rgba(199, 199, 199, 0.569)"
                 delay={600}
                 projectProps={[
@@ -305,7 +316,12 @@ Order processing manager.`,
                     { title: "Designer", value: "DENYS UKHAN" },
                     { title: "Backender", value: "DENYS UKHAN" },
                     { title: "Frontender", value: "DENYS UKHAN" },
-                    { title: "Budget", value: "1 percent of the profit" },
+                    {
+                        title: "Budget",
+                        value: isMobile
+                            ? "1 percent"
+                            : "1 percent of the profit",
+                    },
                 ]}
             />
         </motion.div>

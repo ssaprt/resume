@@ -1,6 +1,7 @@
 import { motion, useTransform } from "framer-motion";
 
 import { AnimatedText } from "../components/text/AnimatedText";
+import { useDevice } from "../scroll/useDevice";
 import { useScrollElementMotion } from "../scroll/useScroll";
 import { GoNext } from "./GoNext";
 import { GoPrev } from "./GoPrev";
@@ -8,59 +9,74 @@ import { Items } from "./Item/Items";
 
 export const ForthBlock = () => {
     const { ref, enterProgress } = useScrollElementMotion();
+    const { isMobile } = useDevice();
 
     const inputStart = 0.15;
     const inputEnd = 0.45;
 
-    const opacity = useTransform(enterProgress, [inputStart, inputEnd], [0, 1]);
-    const w = useTransform(
+    const opacity = useTransform(
         enterProgress,
         [inputStart, inputEnd],
-        ["100vw", "40px"],
+        [isMobile ? 1 : 0, 1],
     );
 
-    const y = useTransform(enterProgress, [inputStart, inputEnd], [-60, 0]);
+    const y = useTransform(
+        enterProgress,
+        [inputStart, inputEnd],
+        [isMobile ? 0 : -60, 0],
+    );
+
+    const p = isMobile ? "p-0" : "p-20";
+    const text = isMobile ? "text-2xl!" : "text-4xl!";
+    const w = isMobile ? "w-full" : "w-2/3";
+    const t = isMobile ? "mt-10" : "mt-0";
 
     return (
-        <div className="w-full min-h-screen col-stretch-4 justify-center p-20 pt-4">
-            <motion.div
-                className="w-full row-center-1 justify-center"
-                style={{ opacity, y }}
-            >
-                <GoPrev />
-            </motion.div>
+        <div
+            className={`w-full min-h-dvh col-stretch-4 justify-center ${p} pt-4`}
+        >
+            {!isMobile && (
+                <motion.div
+                    className="w-full row-center-1 justify-center"
+                    style={{ opacity, y }}
+                >
+                    <GoPrev />
+                </motion.div>
+            )}
 
-            <motion.div className="col-center-4 w-full mb-10">
+            <motion.div className={`col-center-4 w-full mb-10 ${t}`}>
                 <div className="row-center-4 w-full justify-center">
-                    <motion.div
-                        className="h-[1px]! w-[40px] bg-gradient-to-r from-curr/80 to-transparent"
-                        style={{ width: w, opacity }}
-                    />
                     <motion.h1
                         style={{ opacity }}
                         className="relative shrink-0 text-nowrap text-curr/80 text-[32px]! font-raj!"
                     >
                         My Projects
                     </motion.h1>
-
-                    <motion.div
-                        className="h-[1px]! w-[40px] bg-gradient-to-r from-transparent to-curr/80"
-                        style={{ width: w, opacity }}
-                    />
                 </div>
 
-                <div className="w-2/3 mb-6" ref={ref}>
-                    <AnimatedText
-                        as="h1"
-                        text="Presented here are exclusive production projects by Denys Ukhan. All my works have been fully released and feature complete, operational functionality—with no 'demo' label"
-                        className="font-outfit! text-curr! text-5xl! text-center"
-                        start={0.4}
-                    />
+                <div className={`${w} mb-6`} ref={ref}>
+                    {isMobile ? (
+                        <h1
+                            className={`text-center font-outfit! text-curr! ${text} opacity-80`}
+                        >
+                            Presented here are exclusive production projects by
+                            Denys Ukhan. All my works have been fully released
+                            and feature complete, operational functionality—with
+                            no 'demo' label
+                        </h1>
+                    ) : (
+                        <AnimatedText
+                            as="h1"
+                            text={`Presented here are exclusive production projects by Denys Ukhan. All my works have been fully released and feature complete, operational functionality—with no 'demo' label`}
+                            className={`font-outfit! text-curr! ${text} text-center`}
+                            start={0.4}
+                        />
+                    )}
                 </div>
             </motion.div>
 
             <Items />
-            <GoNext />
+            {!isMobile && <GoNext />}
         </div>
     );
 };

@@ -1,5 +1,6 @@
 import { motion, useTransform } from "framer-motion";
 import { useRef } from "react";
+import { useDevice } from "../scroll/useDevice";
 import { useScrollElementMotion } from "../scroll/useScroll";
 import { Card } from "./Card";
 import { types } from "./config";
@@ -111,13 +112,18 @@ export const Items = () => {
     const gridRef = useRef<HTMLDivElement>(null);
     const { ref, enterProgress } = useScrollElementMotion();
     const { active } = useThridBlockContext();
+    const { isMobile } = useDevice();
 
-    const opacity = useTransform(enterProgress, [0, 0.1], [0, 1]);
-    const y = useTransform(enterProgress, [0, 0.1], [90, 0]);
+    const opacity = useTransform(
+        enterProgress,
+        [0, 0.1],
+        [isMobile ? 1 : 0, 1],
+    );
+    const y = useTransform(enterProgress, [0, 0.1], [isMobile ? 0 : 90, 0]);
     const pointerEvents = useTransform(
         enterProgress,
         [0, 0.1],
-        ["none", "auto"],
+        [isMobile ? "auto" : "none", "auto"],
     );
 
     const selectedType = types[active];
@@ -130,6 +136,10 @@ export const Items = () => {
         return normalizeType(item.type) === normalizeType(selectedType);
     });
 
+    const grid = isMobile
+        ? "grid-cols-[repeat(auto-fit,100%)] gap-8"
+        : "grid-cols-[repeat(auto-fit,25%)] gap-3";
+
     return (
         <motion.div
             ref={(element) => {
@@ -139,7 +149,7 @@ export const Items = () => {
             className="relative w-full"
             style={{ y, opacity, pointerEvents }}
         >
-            <div className="grid w-full justify-center grid-cols-[repeat(auto-fit,25%)] gap-3">
+            <div className={`grid w-full justify-center ${grid}`}>
                 {filteredItems.map((item) => (
                     <motion.div
                         key={item.name}

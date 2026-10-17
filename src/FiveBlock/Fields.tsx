@@ -4,6 +4,7 @@ import { FormProvider, useForm } from "react-hook-form";
 import { DynamicSvgIcon } from "../components/Icons/DynamicSvgIcon";
 import { ProcessingStatus } from "../components/loaders/ProcessingStatus";
 import SplitText from "../components/text/ScatterText";
+import { useDevice } from "../scroll/useDevice";
 import { useSendMailMutation } from "../services/mailer";
 import { Field } from "./Field";
 import { Icon } from "./Icon";
@@ -101,6 +102,7 @@ export const Fields = () => {
     const [status, setStatus] = useState<SubmitStatus>("idle");
     const [finished, setFinished] = useState(false);
     const [isResetting, setIsResetting] = useState(false);
+    const { isMobile } = useDevice();
 
     const readyToSending = useAnimationControls();
     const sendingToReceived = useAnimationControls();
@@ -196,14 +198,18 @@ export const Fields = () => {
         status === "received" ||
         status === "success";
 
+    const overlay = isMobile
+        ? "w-full p-4"
+        : "w-auto min-w-[360px] ml-auto p-12";
+
     return (
         <FormProvider {...methods}>
             <form
                 noValidate
                 onSubmit={methods.handleSubmit(onSubmit)}
-                className="w-auto min-w-[360px] ml-auto h-auto border-1 border-curr/20 p-12 rounded-[12px] col-start-8 bg-app"
+                className={`${overlay} h-auto border-1 border-curr/20 rounded-[12px] col-start-8 bg-app`}
             >
-                <Icon />
+                {!isMobile && <Icon />}
 
                 <div className="w-full col-end-1">
                     <SplitText

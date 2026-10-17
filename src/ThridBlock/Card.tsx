@@ -1,7 +1,9 @@
 import { motion } from "framer-motion";
 import { useLayoutEffect, useRef, useState } from "react";
 import { ThreeModelView } from "../components/3D/ThreeModelView";
+import { useDevice } from "../scroll/useDevice";
 import { types } from "./config";
+import { MobileCard } from "./MobileCard";
 import { Tilt } from "./Tilt";
 import { useThridBlockContext } from "./useThridBlockContext";
 
@@ -187,6 +189,8 @@ export const Card = ({
         previousShowRef.current = show;
     }, [show, gridRef]);
 
+    const { isMobile } = useDevice();
+
     return (
         <div
             ref={cardRef}
@@ -225,8 +229,9 @@ export const Card = ({
                     pointerEvents: show ? "auto" : "none",
                 }}
             >
-                <Tilt
-                    className={`
+                {isMobile ? (
+                    <MobileCard
+                        className={`
                         rounded-[12px]
                         col-stretch-0
                         justify-stretch
@@ -235,10 +240,11 @@ export const Card = ({
                         bg-gradient-to-r from-current/5 to-app
                         ${color.border}
                     `}
-                    color={name}
-                >
-                    <div
-                        className={`
+                        color={name}
+                    >
+                        {" "}
+                        <div
+                            className={`
                             absolute
                             z-2
                             outline-1
@@ -255,41 +261,39 @@ export const Card = ({
                             rounded-[4px]
                             px-2
                         `}
-                    >
-                        {type}
-                    </div>
-
-                    <div className="row-center-0 justify-center w-full aspect-square overflow-hidden z-5">
-                        <ThreeModelView
-                            assetName={name}
-                            path={`/${name}.glb`}
-                            autorotate
-                            autorotateSpeed={15}
-                            returnSpeed={1}
-                            rotationZ={0}
-                            camera={{
-                                position: [10, 0, 0],
-                                fov: 24,
-                            }}
-                        />
-                    </div>
-
-                    <div className={`col-start-1 p-2`}>
-                        <div className="row-center-1 w-full mb-2">
-                            <div className="h-[2px] w-1/2 bg-gradient-to-r from-current/50 to-transparent" />
-                            <div className="h-[2px] w-1/2 bg-gradient-to-l from-current/50 to-transparent" />
+                        >
+                            {type}
                         </div>
-                        <div className="row-center-1 justify-between w-full bg-curr/10 p-1 px-2 rounded-md">
-                            <span
-                                className={`${color.text} uppercase font-ops pt-1`}
-                            >
-                                {name}
-                            </span>
+                        <div className="row-center-0 justify-center w-full aspect-square overflow-hidden z-5">
+                            <ThreeModelView
+                                assetName={name}
+                                path={`/${name}.glb`}
+                                autorotate
+                                autorotateSpeed={15}
+                                returnSpeed={1}
+                                rotationZ={0}
+                                camera={{
+                                    position: [12, 0, 0],
+                                    fov: 24,
+                                }}
+                            />
+                        </div>
+                        <div className={`col-start-1 p-2`}>
+                            <div className="row-center-1 w-full mb-2">
+                                <div className="h-[2px] w-1/2 bg-gradient-to-r from-current/50 to-transparent" />
+                                <div className="h-[2px] w-1/2 bg-gradient-to-l from-current/50 to-transparent" />
+                            </div>
+                            <div className="row-center-1 justify-between w-full bg-curr/10 p-1 px-2 rounded-md">
+                                <span
+                                    className={`${color.text} uppercase font-ops pt-1`}
+                                >
+                                    {name}
+                                </span>
 
-                            <div className="row-center-1 w-full h-fit overflow-hidden">
-                                <div className="relative row-center-1 h-[2px] flex-1 w-full rounded-full">
-                                    <div
-                                        className={`
+                                <div className="row-center-1 w-full h-fit overflow-hidden">
+                                    <div className="relative row-center-1 h-[2px] flex-1 w-full rounded-full">
+                                        <div
+                                            className={`
                                             absolute
                                             left-0
                                             top-0
@@ -298,19 +302,19 @@ export const Card = ({
                                             opacity-50
                                             ${color.bg}
                                         `}
-                                    />
+                                        />
 
-                                    <motion.div
-                                        initial={{ width: 0 }}
-                                        animate={{
-                                            width: `${progress}%`,
-                                        }}
-                                        transition={{
-                                            duration: 0.8,
-                                            delay: 0.15,
-                                            ease: [0.22, 1, 0.36, 1],
-                                        }}
-                                        className={`
+                                        <motion.div
+                                            initial={{ width: 0 }}
+                                            animate={{
+                                                width: `${progress}%`,
+                                            }}
+                                            transition={{
+                                                duration: 0.8,
+                                                delay: 0.15,
+                                                ease: [0.22, 1, 0.36, 1],
+                                            }}
+                                            className={`
                                             absolute
                                             left-0
                                             top-0
@@ -318,27 +322,143 @@ export const Card = ({
                                             ${color.bg}
                                             opacity-70
                                         `}
-                                    />
-                                </div>
+                                        />
+                                    </div>
 
-                                <span
-                                    className={`
+                                    <span
+                                        className={`
                                         text-[11px]!
                                         font-raj
                                         ${color.text}
                                     `}
-                                >
-                                    {progress}
-                                    {` / 100`}
-                                </span>
+                                    >
+                                        {progress}
+                                        {` / 100`}
+                                    </span>
+                                </div>
                             </div>
+
+                            <p className={`text-xs font-inter text-curr`}>
+                                {description}
+                            </p>
+                        </div>
+                    </MobileCard>
+                ) : (
+                    <Tilt
+                        className={`
+                        rounded-[12px]
+                        col-stretch-0
+                        justify-stretch
+                        h-80
+                        border-1
+                        bg-gradient-to-r from-current/5 to-app
+                        ${color.border}
+                    `}
+                        color={name}
+                    >
+                        <div
+                            className={`
+                            absolute
+                            z-2
+                            outline-1
+                            outline-offset-2
+                            ${color.outline}
+                            uppercase
+                            right-4
+                            top-4
+                            border-1
+                            ${color.border}
+                            ${color.bg}
+                            text-app
+                            text-sm
+                            rounded-[4px]
+                            px-2
+                        `}
+                        >
+                            {type}
                         </div>
 
-                        <p className={`text-xs font-inter text-curr`}>
-                            {description}
-                        </p>
-                    </div>
-                </Tilt>
+                        <div className="row-center-0 justify-center w-full aspect-square overflow-hidden z-5">
+                            <ThreeModelView
+                                assetName={name}
+                                path={`/${name}.glb`}
+                                autorotate
+                                autorotateSpeed={15}
+                                returnSpeed={1}
+                                rotationZ={0}
+                                camera={{
+                                    position: [12, 0, 0],
+                                    fov: 24,
+                                }}
+                            />
+                        </div>
+
+                        <div className={`col-start-1 p-2`}>
+                            <div className="row-center-1 w-full mb-2">
+                                <div className="h-[2px] w-1/2 bg-gradient-to-r from-current/50 to-transparent" />
+                                <div className="h-[2px] w-1/2 bg-gradient-to-l from-current/50 to-transparent" />
+                            </div>
+                            <div className="row-center-1 justify-between w-full bg-curr/10 p-1 px-2 rounded-md">
+                                <span
+                                    className={`${color.text} uppercase font-ops pt-1`}
+                                >
+                                    {name}
+                                </span>
+
+                                <div className="row-center-1 w-full h-fit overflow-hidden">
+                                    <div className="relative row-center-1 h-[2px] flex-1 w-full rounded-full">
+                                        <div
+                                            className={`
+                                            absolute
+                                            left-0
+                                            top-0
+                                            h-full
+                                            w-full
+                                            opacity-50
+                                            ${color.bg}
+                                        `}
+                                        />
+
+                                        <motion.div
+                                            initial={{ width: 0 }}
+                                            animate={{
+                                                width: `${progress}%`,
+                                            }}
+                                            transition={{
+                                                duration: 0.8,
+                                                delay: 0.15,
+                                                ease: [0.22, 1, 0.36, 1],
+                                            }}
+                                            className={`
+                                            absolute
+                                            left-0
+                                            top-0
+                                            h-full
+                                            ${color.bg}
+                                            opacity-70
+                                        `}
+                                        />
+                                    </div>
+
+                                    <span
+                                        className={`
+                                        text-[11px]!
+                                        font-raj
+                                        ${color.text}
+                                    `}
+                                    >
+                                        {progress}
+                                        {` / 100`}
+                                    </span>
+                                </div>
+                            </div>
+
+                            <p className={`text-xs font-inter text-curr`}>
+                                {description}
+                            </p>
+                        </div>
+                    </Tilt>
+                )}
             </motion.div>
         </div>
     );

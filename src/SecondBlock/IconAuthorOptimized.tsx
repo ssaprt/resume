@@ -6,6 +6,7 @@ import {
     useRef,
     useState,
 } from "react";
+import { useDevice } from "../scroll/useDevice";
 import {
     authorIconAnimationConfig,
     type AuthorIconAnimationDefinition,
@@ -1200,6 +1201,10 @@ export const IconAuthor = ({
         onVisibleChange?.(nextVisible);
     };
 
+    const { isMobile } = useDevice();
+
+    const stroke = isMobile ? "stroke-curr" : "stroke-crm";
+
     return (
         <div
             {...props}
@@ -1207,7 +1212,7 @@ export const IconAuthor = ({
         >
             <canvas
                 ref={canvasRef}
-                className="author-icon__canvas stroke-crm"
+                className={`author-icon__canvas ${stroke}`}
                 role="img"
                 aria-label="Лицо, собранное из линий"
                 aria-hidden={renderPhase === "hidden"}

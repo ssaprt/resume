@@ -1,5 +1,6 @@
 import type { MotionValue } from "framer-motion";
 import {
+    AnimatePresence,
     animate,
     motion,
     useMotionTemplate,
@@ -14,7 +15,9 @@ import {
     useRef,
     useState,
 } from "react";
+import { createPortal } from "react-dom";
 import { SplitText } from "../components/text/ScatterText";
+import { useDevice } from "../scroll/useDevice";
 import {
     useScrollBlockMotion,
     useScrollElementMotion,
@@ -88,6 +91,7 @@ const animateSnake = (
 export const Title = () => {
     const { active, setActive } = useThridBlockContext();
     const { ref, leaveProgress, leaveDirection } = useScrollElementMotion();
+    const { isMobile } = useDevice();
 
     const [hovered, setHovered] = useState<number | null>(null);
     const [hoverSide, setHoverSide] = useState<Side>("bottom");
@@ -227,7 +231,7 @@ export const Title = () => {
             observer.disconnect();
             window.removeEventListener("resize", measureLayout);
         };
-    }, [measureLayout]);
+    }, [measureLayout, isMobile]);
 
     useLayoutEffect(() => {
         if (!layout) return;
@@ -276,6 +280,7 @@ export const Title = () => {
 
     useEffect(() => {
         if (
+            isMobile ||
             !layout ||
             hovered !== null ||
             layout.perimeter <= 0 ||
@@ -303,7 +308,7 @@ export const Title = () => {
                 autoAnimationRef.current = null;
             }
         };
-    }, [hovered, layout, hoverOffset]);
+    }, [isMobile, hovered, layout, hoverOffset]);
 
     const clearHover = () => {
         hoveredRef.current = null;
@@ -314,6 +319,8 @@ export const Title = () => {
     };
 
     const handleHover = (index: number) => {
+        if (isMobile) return;
+
         if (index === active) {
             clearHover();
             return;
@@ -364,6 +371,7 @@ export const Title = () => {
 
     useEffect(() => {
         if (
+            isMobile ||
             hovered === null ||
             hovered === active ||
             !layout ||
@@ -410,6 +418,7 @@ export const Title = () => {
             }
         };
     }, [
+        isMobile,
         hovered,
         active,
         hoverSide,
@@ -419,7 +428,7 @@ export const Title = () => {
         hoverGap,
     ]);
 
-    const opacity = useTransform(leaveProgress, [0, 1], [1, 0]);
+    const opacity = useTransform(leaveProgress, [0, 1], [1, isMobile ? 1 : 0]);
 
     const rectWidth = Math.max((layout?.width ?? 0) - INSET * 2, 0);
     const rectHeight = Math.max((layout?.height ?? 0) - INSET * 2, 0);
@@ -433,15 +442,22 @@ export const Title = () => {
 
     const clipHeight = INSET * 2 + STROKE_WIDTH * 2;
 
+    const text = isMobile ? "text-[1.8em]!" : "text-[32px]!";
+    const w = isMobile ? "w-full" : "w-2/3";
+
     return (
         <motion.div
             ref={(e) => ref(e?.previousSibling as HTMLElement)}
-            className="col-center-4 mb-10 w-full"
+            className="col-center-4 mb-10 w-full z-999"
             style={{ opacity }}
         >
             <GoPrev />
 
-            <motion.div className="row-center-4 w-full justify-center">
+            {isMobile ? (
+                <h1 className="relative shrink-0 text-nowrap text-curr/80 text-[32px]! font-raj!">
+                    Tech Stack
+                </h1>
+            ) : (
                 <SplitText
                     text="Tech Stack"
                     className="relative shrink-0 text-nowrap text-curr/80 text-[32px]! font-raj!"
@@ -463,126 +479,575 @@ export const Title = () => {
                     as="h1"
                     scroll={{ leaveProgress, leaveDirection }}
                 />
-            </motion.div>
+            )}
 
-            <div className="mb-6 w-2/3">
-                <SplitText
-                    text="An interactive tour of my core tech stack and the tools I use in my projects"
-                    className="text-center font-outfit! text-curr! text-5xl! opacity-80"
-                    left={{
-                        x: -80,
-                        y: 50,
-                        rotate: 0,
-                        scale: 0,
-                        opacity: 0,
-                    }}
-                    right={{
-                        x: 80,
-                        y: 50,
-                        rotate: 0,
-                        scale: 0,
-                        opacity: 0,
-                    }}
-                    stagger={0.2}
-                    as="h1"
-                    scroll={{ leaveProgress, leaveDirection }}
-                />
-            </div>
-
-            <div
-                ref={borderRef}
-                className="relative isolate row-center-2 rounded-[12px] p-3"
-                onMouseLeave={clearHover}
-            >
-                {layout && (
-                    <svg
-                        aria-hidden="true"
-                        className="pointer-events-none absolute -inset-px z-20 h-[calc(100%+2px)] w-[calc(100%+2px)] overflow-visible"
-                        viewBox={`0 0 ${layout.width} ${layout.height}`}
-                        preserveAspectRatio="none"
+            <div className={`mb-6 ${w}`}>
+                {isMobile ? (
+                    <h1
+                        className={`text-center font-outfit! text-curr! ${text} opacity-80`}
                     >
-                        <rect
-                            ref={borderPathRef}
-                            x={INSET}
-                            y={INSET}
-                            width={rectWidth}
-                            height={rectHeight}
-                            rx={radius}
-                            fill="none"
-                            stroke="transparent"
-                            strokeWidth={STROKE_WIDTH}
-                        />
-
-                        <motion.rect
-                            x={INSET}
-                            y={INSET}
-                            width={rectWidth}
-                            height={rectHeight}
-                            rx={radius}
-                            fill="none"
-                            stroke="var(--color-curr)"
-                            strokeWidth={STROKE_WIDTH}
-                            strokeLinecap="round"
-                            strokeDasharray={hoverDashArray}
-                            strokeDashoffset={hoverDashOffset}
-                        />
-
-                        {activeButton && activeClipWidth > 0 && (
-                            <>
-                                <defs>
-                                    <clipPath
-                                        id={clipId}
-                                        clipPathUnits="userSpaceOnUse"
-                                    >
-                                        <rect
-                                            x={activeClipX}
-                                            y={0}
-                                            width={activeClipWidth}
-                                            height={clipHeight}
-                                        />
-                                        <rect
-                                            x={activeClipX}
-                                            y={layout.height - clipHeight}
-                                            width={activeClipWidth}
-                                            height={clipHeight}
-                                        />
-                                    </clipPath>
-                                </defs>
-
-                                <motion.rect
-                                    x={INSET}
-                                    y={INSET}
-                                    width={rectWidth}
-                                    height={rectHeight}
-                                    rx={radius}
-                                    fill="none"
-                                    stroke="var(--color-curr)"
-                                    strokeWidth={STROKE_WIDTH}
-                                    strokeLinecap="round"
-                                    strokeDasharray={hoverDashArray}
-                                    strokeDashoffset={hoverDashOffset}
-                                    clipPath={`url(#${clipId})`}
-                                />
-                            </>
-                        )}
-                    </svg>
-                )}
-
-                {types.map((type, i) => (
-                    <Button
-                        key={type}
-                        type={type}
-                        i={i}
-                        active={active}
-                        onSelect={handleSelect}
-                        onHover={handleHover}
-                        buttonRef={(node) => {
-                            buttonRefs.current[i] = node;
+                        An interactive tour of my core tech stack and the tools
+                        I use in my projects
+                    </h1>
+                ) : (
+                    <SplitText
+                        text="An interactive tour of my core tech stack and the tools I use in my projects"
+                        className={`text-center font-outfit! text-curr! ${text} opacity-80`}
+                        left={{
+                            x: -80,
+                            y: 50,
+                            rotate: 0,
+                            scale: 0,
+                            opacity: 0,
                         }}
+                        right={{
+                            x: 80,
+                            y: 50,
+                            rotate: 0,
+                            scale: 0,
+                            opacity: 0,
+                        }}
+                        stagger={0.2}
+                        as="h1"
+                        scroll={{ leaveProgress, leaveDirection }}
                     />
-                ))}
+                )}
             </div>
+
+            {isMobile ? (
+                <MobileTechSelect
+                    types={types}
+                    active={active}
+                    onSelect={handleSelect}
+                />
+            ) : (
+                <div
+                    ref={borderRef}
+                    className="relative isolate row-center-2 justify-center flex-wrap rounded-[12px] p-3"
+                    onMouseLeave={clearHover}
+                >
+                    {layout && (
+                        <svg
+                            aria-hidden="true"
+                            className="pointer-events-none absolute -inset-px z-20 h-[calc(100%+2px)] w-[calc(100%+2px)] overflow-visible"
+                            viewBox={`0 0 ${layout.width} ${layout.height}`}
+                            preserveAspectRatio="none"
+                        >
+                            <rect
+                                ref={borderPathRef}
+                                x={INSET}
+                                y={INSET}
+                                width={rectWidth}
+                                height={rectHeight}
+                                rx={radius}
+                                fill="none"
+                                stroke="transparent"
+                                strokeWidth={STROKE_WIDTH}
+                            />
+
+                            <motion.rect
+                                x={INSET}
+                                y={INSET}
+                                width={rectWidth}
+                                height={rectHeight}
+                                rx={radius}
+                                fill="none"
+                                stroke="var(--color-curr)"
+                                strokeWidth={STROKE_WIDTH}
+                                strokeLinecap="round"
+                                strokeDasharray={hoverDashArray}
+                                strokeDashoffset={hoverDashOffset}
+                            />
+
+                            {activeButton && activeClipWidth > 0 && (
+                                <>
+                                    <defs>
+                                        <clipPath
+                                            id={clipId}
+                                            clipPathUnits="userSpaceOnUse"
+                                        >
+                                            <rect
+                                                x={activeClipX}
+                                                y={0}
+                                                width={activeClipWidth}
+                                                height={clipHeight}
+                                            />
+                                            <rect
+                                                x={activeClipX}
+                                                y={layout.height - clipHeight}
+                                                width={activeClipWidth}
+                                                height={clipHeight}
+                                            />
+                                        </clipPath>
+                                    </defs>
+
+                                    <motion.rect
+                                        x={INSET}
+                                        y={INSET}
+                                        width={rectWidth}
+                                        height={rectHeight}
+                                        rx={radius}
+                                        fill="none"
+                                        stroke="var(--color-curr)"
+                                        strokeWidth={STROKE_WIDTH}
+                                        strokeLinecap="round"
+                                        strokeDasharray={hoverDashArray}
+                                        strokeDashoffset={hoverDashOffset}
+                                        clipPath={`url(#${clipId})`}
+                                    />
+                                </>
+                            )}
+                        </svg>
+                    )}
+
+                    {types.map((type, i) => (
+                        <Button
+                            key={type}
+                            type={type}
+                            i={i}
+                            active={active}
+                            onSelect={handleSelect}
+                            onHover={handleHover}
+                            buttonRef={(node) => {
+                                buttonRefs.current[i] = node;
+                            }}
+                        />
+                    ))}
+                </div>
+            )}
         </motion.div>
+    );
+};
+
+type MobileTechSelectProps = {
+    types: readonly string[];
+    active: number;
+    onSelect: (index: number) => void;
+};
+
+type MenuPosition = {
+    left: number;
+    width: number;
+    top: number;
+    bottom: number;
+    maxHeight: number;
+    openAbove: boolean;
+};
+
+type MenuSize = {
+    width: number;
+    height: number;
+    radius: number;
+};
+
+const MENU_INSET = 1;
+const MENU_RADIUS = 11;
+const MENU_STROKE_WIDTH = 1.5;
+const MENU_SNAKE_DURATION = 4.5;
+
+const MobileTechSelect = ({
+    types,
+    active,
+    onSelect,
+}: MobileTechSelectProps) => {
+    const [isOpen, setIsOpen] = useState(false);
+    const [menuPosition, setMenuPosition] = useState<MenuPosition | null>(null);
+    const [menuSize, setMenuSize] = useState<MenuSize | null>(null);
+
+    const selectRef = useRef<HTMLDivElement>(null);
+    const triggerRef = useRef<HTMLButtonElement>(null);
+    const menuRef = useRef<HTMLDivElement>(null);
+
+    const snakeOffset = useMotionValue(0);
+    const snakeDashOffset = useTransform(snakeOffset, (value) => -value);
+
+    const activeType = types[active] ?? types[0] ?? "Select technology";
+    const menuMounted = isOpen && menuPosition !== null;
+
+    useEffect(() => {
+        const handlePointerDown = (event: globalThis.PointerEvent) => {
+            const target = event.target;
+
+            if (!(target instanceof Node)) return;
+
+            if (
+                !selectRef.current?.contains(target) &&
+                !menuRef.current?.contains(target)
+            ) {
+                setIsOpen(false);
+            }
+        };
+
+        const handleKeyDown = (event: KeyboardEvent) => {
+            if (event.key === "Escape") {
+                setIsOpen(false);
+            }
+        };
+
+        document.addEventListener("pointerdown", handlePointerDown);
+        document.addEventListener("keydown", handleKeyDown);
+
+        return () => {
+            document.removeEventListener("pointerdown", handlePointerDown);
+            document.removeEventListener("keydown", handleKeyDown);
+        };
+    }, []);
+
+    useEffect(() => {
+        if (!isOpen) return;
+
+        let frameId = 0;
+
+        const updatePosition = () => {
+            const trigger = triggerRef.current;
+
+            if (trigger) {
+                const rect = trigger.getBoundingClientRect();
+
+                const viewportWidth = window.innerWidth;
+                const viewportHeight = window.innerHeight;
+                const gap = 8;
+                const edge = 8;
+
+                const width = Math.min(rect.width, viewportWidth - edge * 2);
+
+                const left = Math.max(
+                    edge,
+                    Math.min(rect.left, viewportWidth - width - edge),
+                );
+
+                const spaceBelow = Math.max(
+                    0,
+                    viewportHeight - rect.bottom - gap - edge,
+                );
+
+                const spaceAbove = Math.max(0, rect.top - gap - edge);
+
+                const preferredHeight = Math.min(viewportHeight * 0.45, 360);
+
+                const openAbove =
+                    spaceBelow < Math.min(preferredHeight, 220) &&
+                    spaceAbove > spaceBelow;
+
+                const availableSpace = openAbove ? spaceAbove : spaceBelow;
+
+                const maxHeight = Math.max(
+                    0,
+                    Math.min(preferredHeight, availableSpace - 14),
+                );
+
+                const next: MenuPosition = {
+                    left,
+                    width,
+                    top: rect.bottom + gap,
+                    bottom: viewportHeight - rect.top + gap,
+                    maxHeight,
+                    openAbove,
+                };
+
+                setMenuPosition((previous) => {
+                    if (
+                        previous &&
+                        previous.openAbove === next.openAbove &&
+                        Math.abs(previous.left - next.left) < 0.5 &&
+                        Math.abs(previous.width - next.width) < 0.5 &&
+                        Math.abs(previous.top - next.top) < 0.5 &&
+                        Math.abs(previous.bottom - next.bottom) < 0.5 &&
+                        Math.abs(previous.maxHeight - next.maxHeight) < 0.5
+                    ) {
+                        return previous;
+                    }
+
+                    return next;
+                });
+            }
+
+            frameId = requestAnimationFrame(updatePosition);
+        };
+
+        updatePosition();
+
+        return () => cancelAnimationFrame(frameId);
+    }, [isOpen]);
+
+    useLayoutEffect(() => {
+        if (!menuMounted || !menuRef.current) {
+            setMenuSize(null);
+            return;
+        }
+
+        const element = menuRef.current;
+
+        const measure = () => {
+            const rect = element.getBoundingClientRect();
+
+            if (rect.width <= 0 || rect.height <= 0) return;
+
+            const radius = Math.min(
+                MENU_RADIUS,
+                (rect.width - MENU_INSET * 2) / 2,
+                (rect.height - MENU_INSET * 2) / 2,
+            );
+
+            const next: MenuSize = {
+                width: rect.width,
+                height: rect.height,
+                radius,
+            };
+
+            setMenuSize((previous) => {
+                if (
+                    previous &&
+                    Math.abs(previous.width - next.width) < 0.5 &&
+                    Math.abs(previous.height - next.height) < 0.5 &&
+                    Math.abs(previous.radius - next.radius) < 0.5
+                ) {
+                    return previous;
+                }
+
+                return next;
+            });
+        };
+
+        measure();
+
+        const observer = new ResizeObserver(measure);
+        observer.observe(element);
+
+        return () => observer.disconnect();
+    }, [menuMounted]);
+
+    useEffect(() => {
+        if (!menuMounted || !menuSize) return;
+
+        snakeOffset.set(0);
+
+        const playback = animate(snakeOffset, 1, {
+            duration: MENU_SNAKE_DURATION,
+            ease: "linear",
+            repeat: Infinity,
+            repeatType: "loop",
+        });
+
+        return () => playback.stop();
+    }, [menuMounted, menuSize?.width, menuSize?.height, snakeOffset]);
+
+    const handleSelect = (index: number) => {
+        onSelect(index);
+        setIsOpen(false);
+    };
+
+    const portalRoot = document.getElementById("overlay-root");
+
+    return (
+        <>
+            <div ref={selectRef} className="relative z-30 w-full">
+                <button
+                    ref={triggerRef}
+                    type="button"
+                    aria-label="Select technology"
+                    aria-haspopup="listbox"
+                    aria-expanded={isOpen}
+                    onClick={() => setIsOpen((previous) => !previous)}
+                    className="
+                        flex w-full items-center justify-between gap-3
+                        rounded-xl border border-curr/50
+                        bg-app px-4 py-3 text-left text-curr
+                        transition-colors duration-200
+                        active:border-curr
+                        focus-visible:outline
+                        focus-visible:outline-1
+                        focus-visible:outline-curr
+                    "
+                >
+                    <span className="flex min-w-0 items-center gap-3">
+                        <span className="grid size-8 shrink-0 place-items-center rounded-lg border border-curr/40 font-mono text-xs text-curr">
+                            {String(active + 1).padStart(2, "0")}
+                        </span>
+
+                        <span className="truncate font-ops tracking-[0.16em]">
+                            {activeType}
+                        </span>
+                    </span>
+
+                    <motion.svg
+                        aria-hidden="true"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        className="size-5 shrink-0 text-curr"
+                        animate={{ rotate: isOpen ? 180 : 0 }}
+                        transition={{
+                            duration: 0.2,
+                            ease: "easeInOut",
+                        }}
+                    >
+                        <path
+                            d="m6 9 6 6 6-6"
+                            stroke="currentColor"
+                            strokeWidth="1.5"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                        />
+                    </motion.svg>
+                </button>
+            </div>
+
+            {portalRoot &&
+                createPortal(
+                    <AnimatePresence>
+                        {menuMounted && (
+                            <motion.div
+                                ref={menuRef}
+                                key="tech-options"
+                                initial={{
+                                    opacity: 0,
+                                    y: menuPosition.openAbove ? 6 : -6,
+                                    scale: 0.985,
+                                }}
+                                animate={{
+                                    opacity: 1,
+                                    y: 0,
+                                    scale: 1,
+                                }}
+                                exit={{
+                                    opacity: 0,
+                                    y: menuPosition.openAbove ? 4 : -4,
+                                    scale: 0.99,
+                                }}
+                                transition={{
+                                    duration: 0.16,
+                                    ease: "easeOut",
+                                }}
+                                className="
+                                    overflow-hidden rounded-xl
+                                    border border-curr/40
+                                    bg-app shadow-2xl
+                                "
+                                style={{
+                                    position: "fixed",
+                                    left: menuPosition.left,
+                                    width: menuPosition.width,
+                                    top: menuPosition.openAbove
+                                        ? undefined
+                                        : menuPosition.top,
+                                    bottom: menuPosition.openAbove
+                                        ? menuPosition.bottom
+                                        : undefined,
+                                    zIndex: 2147483647,
+                                    pointerEvents: "auto",
+                                }}
+                            >
+                                {menuSize && (
+                                    <svg
+                                        aria-hidden="true"
+                                        className="pointer-events-none absolute inset-0 z-10 h-full w-full"
+                                        viewBox={`0 0 ${menuSize.width} ${menuSize.height}`}
+                                        preserveAspectRatio="none"
+                                    >
+                                        <motion.rect
+                                            x={MENU_INSET}
+                                            y={MENU_INSET}
+                                            width={Math.max(
+                                                menuSize.width - MENU_INSET * 2,
+                                                0,
+                                            )}
+                                            height={Math.max(
+                                                menuSize.height -
+                                                    MENU_INSET * 2,
+                                                0,
+                                            )}
+                                            rx={menuSize.radius}
+                                            pathLength={1}
+                                            fill="none"
+                                            stroke="var(--color-curr)"
+                                            strokeWidth={MENU_STROKE_WIDTH}
+                                            strokeLinecap="round"
+                                            strokeDasharray="0.16 0.84"
+                                            strokeDashoffset={snakeDashOffset}
+                                        />
+                                    </svg>
+                                )}
+
+                                <div
+                                    role="listbox"
+                                    aria-label="Technology stack"
+                                    data-lenis-prevent
+                                    className="relative z-0 overflow-y-auto overscroll-contain p-1.5"
+                                    style={{
+                                        maxHeight: menuPosition.maxHeight,
+                                    }}
+                                >
+                                    {types.map((type, index) => {
+                                        const isSelected = active === index;
+
+                                        return (
+                                            <button
+                                                key={type}
+                                                type="button"
+                                                role="option"
+                                                aria-selected={isSelected}
+                                                onClick={() =>
+                                                    handleSelect(index)
+                                                }
+                                                className={`
+                                                    flex w-full items-center gap-3
+                                                    rounded-lg px-3 py-3
+                                                    text-left
+                                                    transition-colors duration-150
+                                                    ${
+                                                        isSelected
+                                                            ? "bg-curr text-app!"
+                                                            : "text-curr hover:bg-white/5 hover:text-fg!"
+                                                    }
+                                                `}
+                                            >
+                                                <span
+                                                    className={`
+                                                        grid size-7 shrink-0 place-items-center
+                                                        rounded-md border font-mono text-[10px]
+                                                        ${
+                                                            isSelected
+                                                                ? "border-app/30"
+                                                                : "border-curr/30"
+                                                        }
+                                                    `}
+                                                >
+                                                    {String(index + 1).padStart(
+                                                        2,
+                                                        "0",
+                                                    )}
+                                                </span>
+
+                                                <span className="min-w-0 flex-1 truncate font-ops text-sm tracking-[0.14em]">
+                                                    {type}
+                                                </span>
+
+                                                {isSelected && (
+                                                    <svg
+                                                        aria-hidden="true"
+                                                        viewBox="0 0 24 24"
+                                                        fill="none"
+                                                        className="size-4 shrink-0"
+                                                    >
+                                                        <path
+                                                            d="m5 12 4 4L19 6"
+                                                            stroke="currentColor"
+                                                            strokeWidth="1.8"
+                                                            strokeLinecap="round"
+                                                            strokeLinejoin="round"
+                                                        />
+                                                    </svg>
+                                                )}
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>,
+                    portalRoot,
+                )}
+        </>
     );
 };
 
@@ -604,6 +1069,8 @@ const Button = ({
     buttonRef,
 }: ButtonProps) => {
     const { animationTop, animationBottom } = useScrollBlockMotion(2);
+    const { isMobile } = useDevice();
+    const p = isMobile ? "py-2 px-3 w-full" : "py-1 pt-[6px] px-2";
 
     const position = useTransform(
         [animationTop, animationBottom],
@@ -620,7 +1087,7 @@ const Button = ({
     return (
         <motion.button
             ref={buttonRef}
-            style={{ filter }}
+            style={isMobile ? { filter: "none" } : { filter }}
             data-cursor="button"
             data-color={isActive ? "curr" : "curr"}
             onClick={() => onSelect(i)}
@@ -631,9 +1098,7 @@ const Button = ({
                 text-[10px]
                 font-ops
                 tracking-[0.2em]
-                py-1
-                pt-[6px]
-                px-2
+                ${p}
                 outline-1
                 outline-fg/20
                 outline-offset-2

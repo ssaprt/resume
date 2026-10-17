@@ -1,6 +1,7 @@
 import { motion, type MotionStyle } from "framer-motion";
 import { Fragment, useEffect, useRef, type PointerEvent } from "react";
 import { DynamicSvgIcon } from "../../components/Icons/DynamicSvgIcon";
+import { useDevice } from "../../scroll/useDevice";
 import { Videos } from "../Videos";
 import { ProjectSpendTime } from "./ProjectSpendTime";
 import { colors } from "./shared/config/colors.config";
@@ -29,6 +30,7 @@ export const Item = ({
     dir,
 }: ItemContextProps) => {
     const color = colors[colorName];
+    const { isMobile } = useDevice();
 
     const wrapperRef = useRef<HTMLDivElement>(null);
     const tiltRef = useRef<HTMLDivElement>(null);
@@ -46,7 +48,20 @@ export const Item = ({
     const animationFrameRef = useRef<number | null>(null);
 
     useEffect(() => {
-        const animate = () => {
+        const element = tiltRef.current;
+
+        if (!element) return;
+
+        if (isMobile) {
+            targetRotation.current = { x: 0, y: 0 };
+            currentRotation.current = { x: 0, y: 0 };
+
+            element.style.transform = "none";
+
+            return;
+        }
+
+        const animateTilt = () => {
             const current = currentRotation.current;
             const target = targetRotation.current;
 
@@ -63,30 +78,29 @@ export const Item = ({
                 `;
             }
 
-            animationFrameRef.current = requestAnimationFrame(animate);
+            animationFrameRef.current = requestAnimationFrame(animateTilt);
         };
 
-        animationFrameRef.current = requestAnimationFrame(animate);
+        animationFrameRef.current = requestAnimationFrame(animateTilt);
 
         return () => {
             if (animationFrameRef.current !== null) {
                 cancelAnimationFrame(animationFrameRef.current);
+                animationFrameRef.current = null;
             }
         };
-    }, []);
+    }, [isMobile]);
 
     const handlePointerMove = (event: PointerEvent<HTMLDivElement>) => {
+        if (isMobile) return;
+
         const element = wrapperRef.current;
 
-        if (!element) {
-            return;
-        }
+        if (!element) return;
 
         const rect = element.getBoundingClientRect();
 
-        if (!rect.width || !rect.height) {
-            return;
-        }
+        if (!rect.width || !rect.height) return;
 
         const x = (event.clientX - rect.left) / rect.width;
         const y = (event.clientY - rect.top) / rect.height;
@@ -101,11 +115,20 @@ export const Item = ({
     };
 
     const handlePointerLeave = () => {
+        if (isMobile) return;
+
         targetRotation.current = {
             x: 0,
             y: 0,
         };
     };
+
+    const stack = isMobile ? "text-[1.3em]" : "text-[2em]";
+    const t = isMobile ? "text-[10px]!" : "text-[12px]!";
+    const mt = isMobile ? "mt-2" : "mt-0";
+    const shadow = isMobile
+        ? "shadow-[0_0_0px_1px] shadow-current/50 bg-current/10"
+        : "shadow-[0_0_1px_1px] shadow-current/30 bg-current/3";
 
     return (
         <ContextItem.Provider
@@ -123,54 +146,54 @@ export const Item = ({
             }}
         >
             <motion.div
-                ref={(e) => {
-                    wrapperRef.current = e;
+                ref={(element) => {
+                    wrapperRef.current = element;
                 }}
                 data-cursor="magnetic"
                 data-color={colorName}
-                className=" w-full h-full"
-                onPointerMove={handlePointerMove}
-                onPointerLeave={handlePointerLeave}
+                className="h-full w-full"
+                onPointerMove={isMobile ? undefined : handlePointerMove}
+                onPointerLeave={isMobile ? undefined : handlePointerLeave}
             >
                 <motion.div
                     ref={tiltRef}
                     style={
                         {
-                            transformStyle: "preserve-3d",
+                            transform: isMobile ? "none" : undefined,
+                            transformStyle: isMobile ? "flat" : "preserve-3d",
                             transformOrigin: "center center",
-                            willChange: "transform",
+                            willChange: isMobile ? "auto" : "transform",
                             "--color": `var(--${colorName})`,
                         } as MotionStyle
                     }
                     className={`
-    relative
-    flex
-    h-full
-    w-full
-    col-center-1
-    overflow-hidden
-    shadow-[0_0_1px_1px]
-    shadow-current/30
-    rounded-[12px]
-    p-4
-    bg-current/3
-    ${color.text}
-    before:content-['']
-    before:absolute
-    before:w-full
-    before:h-full
-    before:bottom-0
-    before:left-0
-    hover:before:bg-current/3
-    before:-z-10
-`}
+                        relative
+                        flex
+                        h-full
+                        w-full
+                        col-center-1
+                        overflow-hidden
+                        ${shadow}
+                        rounded-[12px]
+                        p-4
+                        
+                        ${color.text}
+                        before:content-['']
+                        before:absolute
+                        before:w-full
+                        before:h-full
+                        before:bottom-0
+                        before:left-0
+                        hover:before:bg-current/3
+                        before:-z-10
+                    `}
                 >
                     <div className="row-center-1 justify-start p-2 mb-4">
                         <span
                             className={`
                                 absolute right-2 top-1
                                 py-1 px-2
-                                text-[12px]!
+                                ${t}
                                 shadow-[0_0_1px_1px]
                                 rounded-full
                                 ${color.shadow}
@@ -180,7 +203,7 @@ export const Item = ({
                         </span>
 
                         <div className="col-start-3">
-                            <div className="row-center-2">
+                            <div className={`row-center-2 ${mt}`}>
                                 <div className="w-16 h-16 row-center-1 justify-center rounded-full p-2 shrink-0">
                                     <DynamicSvgIcon
                                         name={`${iconName}.svg`}
@@ -188,7 +211,7 @@ export const Item = ({
                                     />
                                 </div>
 
-                                <h3 className="font-manrope! text-[2em]">
+                                <h3 className={`font-manrope! ${stack}`}>
                                     {title}
                                 </h3>
                             </div>

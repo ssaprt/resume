@@ -17,17 +17,17 @@ import { useDevice } from "./scroll/useDevice";
 import { SecondBlock } from "./SecondBlock/SecondBlock";
 import { useAssetReady } from "./shared/AssetLoader/useAssetReady";
 import { ThridBlock } from "./ThridBlock/ThridBlock";
-import { TopRight } from "./TopRight";
 
 function App() {
     const isAssetReady = useAssetReady();
     const { isDesktop } = useDevice();
-    const p = isDesktop ? "p-0" : "pl-4";
+    const p = isDesktop ? "p-0" : "pl-0";
 
     const [modelsPreloaded, setModelsPreloaded] = useState(false);
 
     useEffect(() => {
         scrollManager.init();
+        scrollManager.snapDuration = isDesktop ? 1700 : 1300;
 
         return () => {
             scrollManager.destroy();
@@ -46,6 +46,7 @@ function App() {
                 returnSpeed={1}
             >
                 <div id="scroll-container">
+                    {!isDesktop && <div className="mobile-bg" />}
                     <div id="scroll-content">
                         {modelsPreloaded && (
                             <main className={`relative w-full ${p}`}>
@@ -61,18 +62,20 @@ function App() {
                                     <ThridBlock />
                                 </UnControlScrollSection>
 
-                                {isDesktop && (
-                                    <>
-                                        <UnControlScrollSection
-                                            id="4"
-                                            style={{ zIndex: 2 }}
-                                        >
-                                            <ForthBlock />
-                                        </UnControlScrollSection>
-                                        <ControlScrollSection id="5">
-                                            <FiveBlock />
-                                        </ControlScrollSection>
-                                    </>
+                                <UnControlScrollSection
+                                    id="4"
+                                    style={{ zIndex: 2 }}
+                                >
+                                    <ForthBlock />
+                                </UnControlScrollSection>
+                                {!isDesktop ? (
+                                    <UnControlScrollSection id="5">
+                                        <FiveBlock />
+                                    </UnControlScrollSection>
+                                ) : (
+                                    <ControlScrollSection id="5">
+                                        <FiveBlock />
+                                    </ControlScrollSection>
                                 )}
                             </main>
                         )}
@@ -100,8 +103,6 @@ function App() {
                     circleOpacity={1}
                 />
             )}
-
-            <TopRight />
 
             <Menu />
 

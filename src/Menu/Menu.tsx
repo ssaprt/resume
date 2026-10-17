@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 
 import { scrollManager } from "../scroll/ScrollManager";
+import { useDevice } from "../scroll/useDevice";
 import { useScrollBlocks } from "../scroll/useScroll";
 import { ToTop } from "./ToTop";
 import { Top } from "./Top/Top";
@@ -10,6 +11,7 @@ const clamp = (value: number) => Math.min(Math.max(value, 0), 1);
 
 export const Menu = () => {
     const blocks = useScrollBlocks();
+    const { isMobile } = useDevice();
 
     return (
         <div
@@ -45,9 +47,10 @@ export const Menu = () => {
                     gap-2
                 "
             >
-                {blocks.map((block) => (
-                    <MenuBlock key={block.block} block={block} />
-                ))}
+                {!isMobile &&
+                    blocks.map((block) => (
+                        <MenuBlock key={block.block} block={block} />
+                    ))}
             </div>
 
             <div className="shrink-0">

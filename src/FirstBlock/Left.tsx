@@ -18,16 +18,18 @@ export const Left = () => {
 
     const opacity = useTransform(
         leaveProgress,
-        [0, isMobile ? 0.1 : 0.5],
+        [0, isMobile ? (leaveDirection.get() === -1 ? 0.25 : 0.75) : 0.5],
         [1, 0],
     );
-    const scale = useTransform(leaveProgress, [0, 0.1], [1, 0.8]);
 
-    const x = useTransform(leaveProgress, [0, 1], [0, -500]);
+    const x = useTransform(
+        leaveProgress,
+        [0, isMobile ? (leaveDirection.get() === -1 ? 0.1 : 0.9) : 0.5],
+        [0, isMobile ? 50 : -500],
+    );
 
     return isMobile ? (
         <motion.div
-            style={{ opacity, scale, y }}
             ref={(e) => ref(e?.parentNode as HTMLElement)}
             className="col-center-2 mt-10"
         >
