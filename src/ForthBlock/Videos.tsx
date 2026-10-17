@@ -1,211 +1,137 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { colors } from "./Item/shared/config/colors.config";
 import { useItemContext } from "./Item/shared/hook/useItemContext";
 import { Video } from "./Video";
 
-const GAP = 12;
-
-type VideoPreview = {
-    ratio: number;
-    frame: string;
-};
-
-const getVideoPreview = (src: string): Promise<VideoPreview> => {
-    return new Promise((resolve, reject) => {
-        const video = document.createElement("video");
-
-        video.preload = "auto";
-        video.muted = true;
-        video.playsInline = true;
-
-        const cleanup = () => {
-            video.removeEventListener("loadeddata", handleLoadedData);
-            video.removeEventListener("error", handleError);
-
-            video.pause();
-            video.removeAttribute("src");
-            video.load();
-        };
-
-        const handleLoadedData = () => {
-            if (!video.videoWidth || !video.videoHeight) {
-                cleanup();
-
-                reject(new Error("Unable to determine video dimensions"));
-
-                return;
-            }
-
-            const canvas = document.createElement("canvas");
-
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
-
-            const context = canvas.getContext("2d");
-
-            if (!context) {
-                cleanup();
-
-                reject(new Error("Unable to create canvas context"));
-
-                return;
-            }
-
-            context.drawImage(video, 0, 0, video.videoWidth, video.videoHeight);
-
-            const frame = canvas.toDataURL("image/jpeg", 0.85);
-
-            const ratio = video.videoWidth / video.videoHeight;
-
-            cleanup();
-
-            resolve({
-                ratio,
-                frame,
-            });
-        };
-
-        const handleError = () => {
-            cleanup();
-
-            reject(new Error(`Unable to load video preview: ${src}`));
-        };
-
-        video.addEventListener("loadeddata", handleLoadedData);
-
-        video.addEventListener("error", handleError);
-
-        video.src = src;
-        video.load();
-    });
-};
+const getPoster = (src: string) => src.replace(/\.[^.]+$/, ".webp");
 
 export const Videos = () => {
     const { colorName, src, srcMobile } = useItemContext();
 
     const color = colors[colorName];
 
-    const [desktopPreview, setDesktopPreview] = useState<VideoPreview | null>(
-        null,
-    );
+    const desktopPoster = getPoster(src);
+    const mobilePoster = srcMobile ? getPoster(srcMobile) : undefined;
 
-    const [mobilePreview, setMobilePreview] = useState<VideoPreview | null>(
-        null,
-    );
+    const [desktopRatio, setDesktopRatio] = useState<number | null>(null);
+    const [mobileRatio, setMobileRatio] = useState<number | null>(null);
 
-    useEffect(() => {
-        let cancelled = false;
-        //eslint-disable-next-line
-        setDesktopPreview(null);
-        setMobilePreview(null);
+    const handleDesktopPosterLoad = (
+        event: React.SyntheticEvent<HTMLImageElement>,
+    ) => {
+        const image = event.currentTarget;
 
-        void getVideoPreview(src)
-            .then((preview) => {
-                if (!cancelled) {
-                    setDesktopPreview(preview);
-                }
-            })
-            .catch(() => {});
-
-        if (srcMobile) {
-            void getVideoPreview(srcMobile)
-                .then((preview) => {
-                    if (!cancelled) {
-                        setMobilePreview(preview);
-                    }
-                })
-                .catch(() => {});
+        if (image.naturalWidth && image.naturalHeight) {
+            setDesktopRatio(image.naturalWidth / image.naturalHeight);
         }
+    };
 
-        return () => {
-            cancelled = true;
-        };
-    }, [src, srcMobile]);
+    const handleMobilePosterLoad = (
+        event: React.SyntheticEvent<HTMLImageElement>,
+    ) => {
+        const image = event.currentTarget;
 
-    if (!desktopPreview || (srcMobile && !mobilePreview)) {
+        if (image.naturalWidth && image.naturalHeight) {
+            setMobileRatio(image.naturalWidth / image.naturalHeight);
+        }
+    };
+
+    if (!srcMobile || !mobilePoster) {
         return (
             <div
-                className="w-full"
+                className={`relative w-full overflow-hidden rounded-[12px] shadow-[0_0_2px_1px] ${color.shadow}`}
                 style={{
-                    visibility: "hidden",
+                    aspectRatio: desktopRatio ?? undefined,
                 }}
-            />
-        );
-    }
+            >
+                <img
+                    src={desktopPoster}
+                    alt=""
+                    draggable={false}
+                    className="pointer-events-none block h-auto w-full select-none"
+                    onLoad={handleDesktopPosterLoad}
+                />
 
-    if (!srcMobile) {
-        return (
-            <div className="w-full row-start-3">
-                <div
-                    className={`relative w-full overflow-hidden rounded-[12px] shadow-[0_0_2px_1px] ${color.shadow}`}
-                    style={{
-                        aspectRatio: `${desktopPreview.ratio}`,
-                    }}
-                >
-                    <div className="pointer-events-none absolute inset-0 z-2 shadow-[inset_0_0_100px_0] shadow-app" />
-
+                <div className="absolute inset-0">
                     <Video
-                        autoPlay
                         loop
                         muted
+                        playsInline
                         threshold={0.1}
                         src={src}
-                        poster={desktopPreview.frame}
-                        className="z-1 block size-full"
+                        poster={desktopPoster}
+                        className="z-1 block size-full object-cover"
                     />
                 </div>
+
+                <div className="pointer-events-none absolute inset-0 z-2 shadow-[inset_0_0_100px_0] shadow-app" />
             </div>
         );
     }
 
-    const totalRatio = desktopPreview.ratio + mobilePreview!.ratio;
-
-    const availableWidth = `calc(100% - ${GAP}px)`;
-
-    const desktopWidth = `calc(${availableWidth} * ${desktopPreview.ratio} / ${totalRatio})`;
-
-    const mobileWidth = `calc(${availableWidth} * ${mobilePreview!.ratio} / ${totalRatio})`;
+    const desktopFlex = desktopRatio ?? 1;
+    const mobileFlex = mobileRatio ?? 1;
 
     return (
-        <div className="flex w-full gap-3">
+        <div className="flex w-full items-start gap-3">
             <div
-                className={`relative shrink-0 overflow-hidden rounded-[12px] shadow-[0_0_2px_1px] ${color.shadow}`}
+                className={`relative min-w-0 overflow-hidden rounded-[12px] shadow-[0_0_2px_1px] ${color.shadow}`}
                 style={{
-                    width: desktopWidth,
-                    aspectRatio: `${desktopPreview.ratio}`,
+                    flex: `${desktopFlex} 1 0%`,
+                    aspectRatio: desktopRatio ?? undefined,
                 }}
             >
-                <div className="pointer-events-none absolute inset-0 z-2 shadow-[inset_0_0_100px_0] shadow-app" />
-
-                <Video
-                    autoPlay
-                    loop
-                    muted
-                    threshold={0.1}
-                    src={src}
-                    poster={desktopPreview.frame}
-                    className="z-1 block size-full"
+                <img
+                    src={desktopPoster}
+                    alt=""
+                    draggable={false}
+                    className="pointer-events-none block h-auto w-full select-none"
+                    onLoad={handleDesktopPosterLoad}
                 />
+
+                <div className="absolute inset-0">
+                    <Video
+                        loop
+                        muted
+                        playsInline
+                        threshold={0.1}
+                        src={src}
+                        poster={desktopPoster}
+                        className="z-1 block size-full object-cover"
+                    />
+                </div>
+
+                <div className="pointer-events-none absolute inset-0 z-2 shadow-[inset_0_0_100px_0] shadow-app" />
             </div>
 
             <div
-                className={`relative shrink-0 overflow-hidden rounded-[12px] shadow-[0_0_2px_1px] ${color.shadow}`}
+                className={`relative min-w-0 overflow-hidden rounded-[12px] shadow-[0_0_2px_1px] ${color.shadow}`}
                 style={{
-                    width: mobileWidth,
-                    aspectRatio: `${mobilePreview!.ratio}`,
+                    flex: `${mobileFlex} 1 0%`,
+                    aspectRatio: mobileRatio ?? undefined,
                 }}
             >
-                <div className="pointer-events-none absolute inset-0 z-2 shadow-[inset_0_0_100px_0] shadow-app" />
-
-                <Video
-                    autoPlay
-                    loop
-                    muted
-                    threshold={0.1}
-                    src={srcMobile}
-                    poster={mobilePreview!.frame}
-                    className="z-1 block size-full"
+                <img
+                    src={mobilePoster}
+                    alt=""
+                    draggable={false}
+                    className="pointer-events-none block h-auto w-full select-none"
+                    onLoad={handleMobilePosterLoad}
                 />
+
+                <div className="absolute inset-0">
+                    <Video
+                        loop
+                        muted
+                        playsInline
+                        threshold={0.1}
+                        src={srcMobile}
+                        poster={mobilePoster}
+                        className="z-1 block size-full object-cover"
+                    />
+                </div>
+
+                <div className="pointer-events-none absolute inset-0 z-2 shadow-[inset_0_0_100px_0] shadow-app" />
             </div>
         </div>
     );

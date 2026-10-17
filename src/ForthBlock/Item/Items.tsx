@@ -68,7 +68,7 @@ export const Items = () => {
                 title="Two-Peters"
                 src="/videos/two-peters.mp4"
                 srcMobile="/videos/two-peters-mobile.mp4"
-                colorName="two-peters"
+                colorName="curr"
                 colorGlass="rgba(38, 38, 38, .9)"
                 delay={600}
                 projectProps={[
@@ -116,7 +116,7 @@ export const Items = () => {
                 title="Utility-lab"
                 src="/videos/utility-lab.mp4"
                 srcMobile="/videos/utility-lab-mobile.mp4"
-                colorName="crm"
+                colorName="curr"
                 colorGlass="rgba(100, 116, 139, .9)"
                 delay={600}
                 projectProps={[
@@ -175,7 +175,7 @@ Order processing manager.`,
                 iconName="two-peters"
                 title="Business MS"
                 src="/videos/panel-two-peters.mp4"
-                colorName="two-peters"
+                colorName="curr"
                 colorGlass="rgba(0,0,0,.55)"
                 delay={600}
                 projectProps={[
@@ -260,7 +260,7 @@ It displays comprehensive information for each station, including the album, art
                 title="GMoon"
                 src="/videos/gmoon.mp4"
                 srcMobile="/videos/gmoon-mobile.mp4"
-                colorName="gmoon"
+                colorName="curr"
                 colorGlass="rgba(83, 222, 203, 0.543)"
                 delay={600}
                 projectProps={[
@@ -306,7 +306,7 @@ Order processing manager.`,
                 title="Custom CRM"
                 src="/videos/crm.mp4"
                 srcMobile="/videos/crm-mobile.mp4"
-                colorName="crm"
+                colorName="curr"
                 colorGlass="rgba(199, 199, 199, 0.569)"
                 delay={600}
                 projectProps={[

@@ -97,7 +97,7 @@ export const Tilt = ({
         };
     };
 
-    const bsh = `0px 0px 2px -1px var(--${color})`;
+    const bsh = `0px 0px 3px -1px var(--${color})`;
     const bshHover = `0px 0px 34px -20px var(--${color})`;
 
     return (

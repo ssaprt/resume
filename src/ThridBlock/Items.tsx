@@ -151,31 +151,7 @@ export const Items = () => {
         >
             <div className={`grid w-full justify-center ${grid}`}>
                 {filteredItems.map((item) => (
-                    <motion.div
-                        key={item.name}
-                        layout="position"
-                        initial={{
-                            opacity: 0,
-                            y: 20,
-                        }}
-                        animate={{
-                            opacity: 1,
-                            y: 0,
-                        }}
-                        transition={{
-                            layout: {
-                                duration: 0.35,
-                                ease: [0.22, 1, 0.36, 1],
-                            },
-                            opacity: {
-                                duration: 0.25,
-                            },
-                            y: {
-                                duration: 0.35,
-                                ease: [0.22, 1, 0.36, 1],
-                            },
-                        }}
-                    >
+                    <div key={item.name}>
                         <Card
                             gridRef={gridRef}
                             name={item.name}
@@ -183,7 +159,7 @@ export const Items = () => {
                             type={item.type}
                             progress={item.progress}
                         />
-                    </motion.div>
+                    </div>
                 ))}
             </div>
         </motion.div>

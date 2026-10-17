@@ -1,7 +1,12 @@
 import { useEffect, useRef, useState } from "react";
 
-type VideoProps = React.VideoHTMLAttributes<HTMLVideoElement> & {
+type VideoProps = Omit<
+    React.VideoHTMLAttributes<HTMLVideoElement>,
+    "src" | "poster" | "autoPlay"
+> & {
     threshold?: number;
+    src: string;
+    poster: string;
 };
 
 export const Video = ({
@@ -12,81 +17,100 @@ export const Video = ({
 }: VideoProps) => {
     const videoRef = useRef<HTMLVideoElement>(null);
 
+    const [isNear, setIsNear] = useState(false);
     const [isInView, setIsInView] = useState(false);
     const [isLoaded, setIsLoaded] = useState(false);
-
-    const [isSourceAssigned, setIsSourceAssigned] = useState(false);
 
     useEffect(() => {
         const video = videoRef.current;
 
         if (!video) return;
 
-        const observer = new IntersectionObserver(
+        const preloadObserver = new IntersectionObserver(
             ([entry]) => {
                 if (entry.isIntersecting) {
-                    setIsInView(true);
+                    setIsNear(true);
+                    preloadObserver.disconnect();
+                }
+            },
+            {
+                rootMargin: "500px 0px",
+                threshold: 0,
+            },
+        );
 
-                    if (!isSourceAssigned) {
-                        setIsSourceAssigned(true);
-                    }
-                } else {
-                    setIsInView(false);
+        const visibilityObserver = new IntersectionObserver(
+            ([entry]) => {
+                const visible = entry.isIntersecting;
+
+                setIsInView(visible);
+
+                if (!visible) {
                     video.pause();
                 }
             },
             { threshold },
         );
 
-        observer.observe(video);
+        preloadObserver.observe(video);
+        visibilityObserver.observe(video);
 
         return () => {
-            observer.disconnect();
+            preloadObserver.disconnect();
+            visibilityObserver.disconnect();
             video.pause();
         };
-    }, [threshold, isSourceAssigned]);
+    }, [threshold]);
 
     useEffect(() => {
         const video = videoRef.current;
 
-        if (!video || !isSourceAssigned || !src) {
-            return;
-        }
+        if (!video || !isNear || !src) return;
 
         const handleLoadedData = () => {
             setIsLoaded(true);
         };
 
-        video.addEventListener("loadeddata", handleLoadedData);
+        const handleEmptied = () => {
+            setIsLoaded(false);
+        };
 
-        video.src = src;
-        video.load();
+        setIsLoaded(false);
+
+        video.addEventListener("loadeddata", handleLoadedData);
+        video.addEventListener("emptied", handleEmptied);
+
+        if (video.readyState >= 2) {
+            setIsLoaded(true);
+        }
 
         return () => {
             video.removeEventListener("loadeddata", handleLoadedData);
+            video.removeEventListener("emptied", handleEmptied);
         };
-    }, [src, isSourceAssigned]);
+    }, [isNear, src]);
 
     useEffect(() => {
         const video = videoRef.current;
 
-        if (!video || !isInView || !isLoaded) {
-            return;
-        }
+        if (!video) return;
 
-        void video.play().catch(() => {});
-    }, [isInView, isLoaded]);
+        if (isNear && isInView) {
+            void video.play().catch(() => {});
+        } else {
+            video.pause();
+        }
+    }, [isNear, isInView, src]);
 
     return (
         <div className="relative size-full">
             <video
-                ref={videoRef}
-                muted
-                playsInline
-                preload="none"
-                poster={poster}
-                data-loaded={isLoaded}
                 {...props}
+                ref={videoRef}
+                src={isNear ? src : undefined}
+                poster={poster}
+                preload={isNear ? "metadata" : "none"}
+                data-loaded={isLoaded}
             />
         </div>
     );

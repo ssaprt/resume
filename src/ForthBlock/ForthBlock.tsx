@@ -1,30 +1,13 @@
-import { motion, useTransform } from "framer-motion";
+import { motion } from "framer-motion";
 
 import { AnimatedText } from "../components/text/AnimatedText";
 import { useDevice } from "../scroll/useDevice";
-import { useScrollElementMotion } from "../scroll/useScroll";
 import { GoNext } from "./GoNext";
 import { GoPrev } from "./GoPrev";
 import { Items } from "./Item/Items";
 
 export const ForthBlock = () => {
-    const { ref, enterProgress } = useScrollElementMotion();
     const { isMobile } = useDevice();
-
-    const inputStart = 0.15;
-    const inputEnd = 0.45;
-
-    const opacity = useTransform(
-        enterProgress,
-        [inputStart, inputEnd],
-        [isMobile ? 1 : 0, 1],
-    );
-
-    const y = useTransform(
-        enterProgress,
-        [inputStart, inputEnd],
-        [isMobile ? 0 : -60, 0],
-    );
 
     const p = isMobile ? "p-0 pt-20" : "p-20";
     const text = isMobile ? "text-2xl!" : "text-4xl!";
@@ -36,25 +19,19 @@ export const ForthBlock = () => {
             className={`w-full min-h-dvh col-stretch-4 justify-center ${p} pt-4`}
         >
             {!isMobile && (
-                <motion.div
-                    className="w-full row-center-1 justify-center"
-                    style={{ opacity, y }}
-                >
+                <motion.div className="w-full row-center-1 justify-center">
                     <GoPrev />
                 </motion.div>
             )}
 
             <motion.div className={`col-center-4 w-full mb-10 ${t}`}>
                 <div className="row-center-4 w-full justify-center">
-                    <motion.h1
-                        style={{ opacity }}
-                        className="relative shrink-0 text-nowrap text-curr/80 text-[32px]! font-raj!"
-                    >
+                    <motion.h1 className="relative shrink-0 text-nowrap text-curr/80 text-[32px]! font-raj!">
                         My Projects
                     </motion.h1>
                 </div>
 
-                <div className={`${w}`} ref={ref}>
+                <div className={`${w}`}>
                     {isMobile ? (
                         <h1
                             className={`text-center font-outfit! text-curr! ${text} opacity-80`}

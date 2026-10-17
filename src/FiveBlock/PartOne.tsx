@@ -1,4 +1,4 @@
-import { motion, useTransform } from "framer-motion";
+import { motion } from "framer-motion";
 import { DynamicSvgIcon } from "../components/Icons/DynamicSvgIcon";
 import SplitText from "../components/text/ScatterText";
 import { useDevice } from "../scroll/useDevice";
@@ -11,8 +11,6 @@ import { Socials } from "./Socials";
 export const PartOne = () => {
     const { leaveDirection, leaveProgress } = useFiveBlockContextProvider();
     const { isMobile } = useDevice();
-
-    const x = useTransform(leaveProgress, [0, 1], [0, isMobile ? 0 : -100]);
 
     const getAge = (birthDate: Date | string): number => {
         const birth = new Date(birthDate);
@@ -53,8 +51,7 @@ export const PartOne = () => {
             )}
             <div className={`${container} flex-1`}>
                 <div className={`col-start-1 h-full`}>
-                    <motion.div
-                        style={{ x }}
+                    <div
                         className={` h-auto
                     w-auto
                     min-w-0
@@ -87,9 +84,8 @@ export const PartOne = () => {
                                 From Ukraine
                             </span>
                         </div>
-                    </motion.div>
-                    <motion.div
-                        style={{ x }}
+                    </div>
+                    <div
                         className={`h-auto
                     w-full
                     min-w-0
@@ -101,13 +97,11 @@ export const PartOne = () => {
                     bg-app`}
                     >
                         <div className={`h-full min-w-0 w-full ${inner}`}>
-                            {!isMobile && (
-                                <div className="col-center-4">
-                                    <div className="size-60 shrink-0">
-                                        <ControllerIconAuthor />
-                                    </div>
+                            <div className="col-center-4">
+                                <div className="size-60 shrink-0">
+                                    <ControllerIconAuthor />
                                 </div>
-                            )}
+                            </div>
 
                             <div className="col-end-4 w-auto flex-1">
                                 <div className="col-start-1 min-w-0 flex-1">
@@ -196,10 +190,9 @@ export const PartOne = () => {
                                 <Socials />
                             </div>
                         </div>
-                    </motion.div>
+                    </div>
                     {!isMobile && (
-                        <motion.div
-                            style={{ x }}
+                        <div
                             className="
                     h-auto
                     w-full
@@ -212,7 +205,7 @@ export const PartOne = () => {
                 "
                         >
                             <CV />
-                        </motion.div>
+                        </div>
                     )}
                 </div>
 

@@ -1,9 +1,9 @@
 import { motion } from "framer-motion";
 import { useLayoutEffect, useRef, useState } from "react";
 import { ThreeModelView } from "../components/3D/ThreeModelView";
+import { DynamicSvgIcon } from "../components/Icons/DynamicSvgIcon";
 import { useDevice } from "../scroll/useDevice";
 import { types } from "./config";
-import { MobileCard } from "./MobileCard";
 import { Tilt } from "./Tilt";
 import { useThridBlockContext } from "./useThridBlockContext";
 
@@ -43,85 +43,85 @@ const colors: Record<
     react: {
         text: "text-react",
         bg: "bg-react",
-        border: "border-react/20",
+        border: "border-react/50",
         outline: "outline-react",
     },
     next: {
         text: "text-next",
         bg: "bg-next",
-        border: "border-next/20",
+        border: "border-next/50",
         outline: "outline-next",
     },
     typescript: {
         text: "text-typescript",
         bg: "bg-typescript",
-        border: "border-typescript/20",
+        border: "border-typescript/50",
         outline: "outline-typescript",
     },
     nestjs: {
         text: "text-nestjs",
         bg: "bg-nestjs",
-        border: "border-nestjs/20",
+        border: "border-nestjs/50",
         outline: "outline-nestjs",
     },
     php: {
         text: "text-php",
         bg: "bg-php",
-        border: "border-php/20",
+        border: "border-php/50",
         outline: "outline-php",
     },
     css: {
         text: "text-css",
         bg: "bg-css",
-        border: "border-css/20",
+        border: "border-css/50",
         outline: "outline-css",
     },
     html: {
         text: "text-html",
         bg: "bg-html",
-        border: "border-html/20",
+        border: "border-html/50",
         outline: "outline-html",
     },
     scss: {
         text: "text-scss",
         bg: "bg-scss",
-        border: "border-scss/20",
+        border: "border-scss/50",
         outline: "outline-scss",
     },
     mysql: {
         text: "text-mysql",
         bg: "bg-mysql",
-        border: "border-mysql/20",
+        border: "border-mysql/50",
         outline: "outline-mysql",
     },
     postgresql: {
         text: "text-postgresql",
         bg: "bg-postgresql",
-        border: "border-postgresql/20",
+        border: "border-postgresql/50",
         outline: "outline-postgresql",
     },
     restapi: {
         text: "text-restapi",
         bg: "bg-restapi",
-        border: "border-restapi/20",
+        border: "border-restapi/50",
         outline: "outline-restapi",
     },
     tailwind: {
         text: "text-tailwind",
         bg: "bg-tailwind",
-        border: "border-tailwind/20",
+        border: "border-tailwind/50",
         outline: "outline-tailwind",
     },
     docker: {
         text: "text-docker",
         bg: "bg-docker",
-        border: "border-docker/20",
+        border: "border-docker/50",
         outline: "outline-docker",
     },
     git: {
         text: "text-git",
         bg: "bg-git",
-        border: "border-git/20",
+        border: "border-git/50",
         outline: "outline-git",
     },
 };
@@ -190,11 +190,12 @@ export const Card = ({
     }, [show, gridRef]);
 
     const { isMobile } = useDevice();
+    const h = isMobile ? "h-100" : "h-80";
 
     return (
         <div
             ref={cardRef}
-            className={`relative h-80 w-full ${color.text}`}
+            className={`relative ${h} w-full ${color.text}`}
             style={
                 exit && position
                     ? {
@@ -208,60 +209,55 @@ export const Card = ({
             }
         >
             <motion.div
-                initial={false}
-                animate={{
-                    opacity: show ? 1 : 0,
-                    scale: show ? 1 : 0.94,
-                    y: show ? 0 : -16,
-                    filter: show ? "blur(0px)" : "blur(15px)",
-                }}
-                transition={{
-                    duration: 0.45,
-                    ease: [0.22, 1, 0.36, 1],
-                }}
-                onAnimationComplete={() => {
-                    if (!show) {
-                        setExit(true);
-                    }
-                }}
                 className="absolute inset-0"
                 style={{
                     pointerEvents: show ? "auto" : "none",
                 }}
             >
                 {isMobile ? (
-                    <MobileCard
+                    <div
                         className={`
-                        rounded-[12px]
+                            rounded-[12px]
+                         bg-current/10
+                        border-1
+                        py-6
+                        px-4
                         col-stretch-0
                         justify-stretch
-                        h-80
-                        border-1
-                        bg-gradient-to-r from-current/5 to-app
-                        ${color.border}
+                        h-full
+                        ${color.text}
+                   
                     `}
-                        color={name}
                     >
-                        {" "}
                         <div
                             className={`
-                            absolute
+                           absolute
+                           right-5
+                           -top-3
                             z-2
-                            outline-1
-                            outline-offset-2
-                            ${color.outline}
+                           
+                            
                             uppercase
-                            right-4
-                            top-4
+                           
                             border-1
-                            ${color.border}
-                            ${color.bg}
-                            text-app
+                            outline-current
+                            bg-app
+                            text-current
                             text-sm
                             rounded-[4px]
                             px-2
+
                         `}
                         >
+                            <DynamicSvgIcon
+                                name="sort_left"
+                                className="size-[35px] fill-current absolute -left-[21px] -top-[7px]"
+                            />
+
+                            <DynamicSvgIcon
+                                name="sort_left"
+                                className="size-[35px] fill-current absolute -right-[21px] -top-[7px] transform scale-x-[-1]"
+                            />
                             {type}
                         </div>
                         <div className="row-center-0 justify-center w-full aspect-square overflow-hidden z-5">
@@ -279,13 +275,9 @@ export const Card = ({
                             />
                         </div>
                         <div className={`col-start-1 p-2`}>
-                            <div className="row-center-1 w-full mb-2">
-                                <div className="h-[2px] w-1/2 bg-gradient-to-r from-current/50 to-transparent" />
-                                <div className="h-[2px] w-1/2 bg-gradient-to-l from-current/50 to-transparent" />
-                            </div>
-                            <div className="row-center-1 justify-between w-full bg-curr/10 p-1 px-2 rounded-md">
+                            <div className="row-center-1 justify-between w-full p-1 px-2 rounded-md">
                                 <span
-                                    className={`${color.text} uppercase font-ops pt-1`}
+                                    className={`text-current uppercase font-ops text-xl`}
                                 >
                                     {name}
                                 </span>
@@ -300,7 +292,7 @@ export const Card = ({
                                             h-full
                                             w-full
                                             opacity-50
-                                            ${color.bg}
+                                            bg-current
                                         `}
                                         />
 
@@ -319,7 +311,7 @@ export const Card = ({
                                             left-0
                                             top-0
                                             h-full
-                                            ${color.bg}
+                                            bg-current
                                             opacity-70
                                         `}
                                         />
@@ -327,9 +319,9 @@ export const Card = ({
 
                                     <span
                                         className={`
-                                        text-[11px]!
-                                        font-raj
-                                        ${color.text}
+                                        text-[12px]!
+                                        font-ops
+                                        text-current
                                     `}
                                     >
                                         {progress}
@@ -338,11 +330,13 @@ export const Card = ({
                                 </div>
                             </div>
 
-                            <p className={`text-xs font-inter text-curr`}>
+                            <p
+                                className={`text-[16px] px-2 font-inter text-current`}
+                            >
                                 {description}
                             </p>
                         </div>
-                    </MobileCard>
+                    </div>
                 ) : (
                     <Tilt
                         className={`
@@ -350,9 +344,9 @@ export const Card = ({
                         col-stretch-0
                         justify-stretch
                         h-80
-                        border-1
+                       
                         bg-gradient-to-r from-current/5 to-app
-                        ${color.border}
+                    
                     `}
                         color={name}
                     >
@@ -366,8 +360,8 @@ export const Card = ({
                             uppercase
                             right-4
                             top-4
-                            border-1
-                            ${color.border}
+                           
+                          
                             ${color.bg}
                             text-app
                             text-sm
@@ -419,16 +413,7 @@ export const Card = ({
                                         `}
                                         />
 
-                                        <motion.div
-                                            initial={{ width: 0 }}
-                                            animate={{
-                                                width: `${progress}%`,
-                                            }}
-                                            transition={{
-                                                duration: 0.8,
-                                                delay: 0.15,
-                                                ease: [0.22, 1, 0.36, 1],
-                                            }}
+                                        <div
                                             className={`
                                             absolute
                                             left-0
@@ -453,7 +438,9 @@ export const Card = ({
                                 </div>
                             </div>
 
-                            <p className={`text-xs font-inter text-curr`}>
+                            <p
+                                className={`text-xs p-2 font-inter ${color.text}`}
+                            >
                                 {description}
                             </p>
                         </div>

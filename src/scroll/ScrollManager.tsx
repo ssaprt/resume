@@ -111,7 +111,7 @@ class ScrollManager {
         }
     >();
 
-    private readonly UNCONTROLLED_GUARD_DISTANCE = 100;
+    private readonly UNCONTROLLED_GUARD_DISTANCE = 0;
 
     private scrollState: ScrollState = {
         y: 0,
@@ -162,7 +162,7 @@ class ScrollManager {
     private alignedUncontrolledY: number | null = null;
     private wrapper: HTMLElement | null = null;
 
-    private SNAP_DURATION = 1700;
+    private SNAP_DURATION = 1.7;
 
     private readonly ALIGN_DURATION = 0.6;
 
@@ -170,7 +170,7 @@ class ScrollManager {
 
     private readonly TOUCH_THRESHOLD = 0;
 
-    private readonly MAGNET_DISTANCE = 20;
+    private readonly MAGNET_DISTANCE = 0;
 
     private readonly EASING = (t: number) =>
         t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
