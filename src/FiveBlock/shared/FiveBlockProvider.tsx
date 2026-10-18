@@ -30,7 +30,7 @@ export const FiveBlockProvider = ({
         [0, 1],
         ["auto", isMobile ? "auto" : "none"],
     );
-    const y = useTransform(leaveProgress, [0, 1], [0, isMobile ? 0 : 320]);
+
     const p = isMobile
         ? "col-center-4 p-0 py-20"
         : "row-center-4 p-10 justify-center";
@@ -47,7 +47,7 @@ export const FiveBlockProvider = ({
         >
             <motion.div
                 ref={(e) => ref(e?.parentNode as HTMLElement)}
-                style={{ opacity, pointerEvents, y }}
+                style={{ opacity, pointerEvents }}
                 className={`w-full h-full ${p} `}
             >
                 {children}

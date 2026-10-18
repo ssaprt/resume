@@ -81,6 +81,37 @@ const emptyElementState: ElementScrollState = {
 
 const clamp = (value: number) => Math.min(Math.max(value, 0), 1);
 
+// P(Bin(n, t) >= k): the regularized incomplete beta function in closed form
+const binomialTail = (n: number, k: number, t: number) => {
+    let sum = 0;
+    let coefficient = 1;
+
+    for (let j = 0; j <= n; j++) {
+        if (j >= k) {
+            sum += coefficient * Math.pow(t, j) * Math.pow(1 - t, n - j);
+        }
+
+        coefficient = (coefficient * (n - j)) / (j + 1);
+    }
+
+    return sum;
+};
+
+// "Mountain" curve: the speed is a bell, zero at both ends together with the
+// acceleration, so the start and the end are as soft as `softness` makes them
+// (2 = quintic smootherstep, 3 = septic, 4 = nonic; higher = longer soft feet
+// and a steeper middle). `startSlope` is the speed at t = 0 in units of the
+// average speed of the move: the move starts at that speed and then follows the
+// same bell. 0 = start from rest, at most 2, never overshoots.
+const createEasing = (startSlope: number, softness: number) => (t: number) => {
+    const bell = binomialTail(2 * softness + 1, softness + 1, t);
+
+    const carried =
+        t * (1 - bell) + 0.5 * binomialTail(2 * softness + 2, softness + 2, t);
+
+    return startSlope * carried + (1 - startSlope / 2) * bell;
+};
+
 const isNativeScrollTarget = (target: EventTarget | null) => {
     return (
         target instanceof Element &&
@@ -125,13 +156,10 @@ class ScrollManager {
 
     private sections: HTMLElement[] = [];
 
-    // sections / blocks are re-collected only after the DOM structure changed
     private structureObserver: MutationObserver | null = null;
 
     private structureDirty = true;
 
-    // layout reads are shared within one synchronous task and dropped right
-    // after it (microtask), so nothing stale survives into the next event/frame
     private rectCache = new Map<HTMLElement, DOMRect>();
 
     private viewportHeightCache: number | null = null;
@@ -162,9 +190,14 @@ class ScrollManager {
     private alignedUncontrolledY: number | null = null;
     private wrapper: HTMLElement | null = null;
 
+    // seconds; the accessors snapDuration / alignDuration / wheelDuration take
+    // milliseconds. A duration of 0 must never reach Lenis: it silently
+    // switches the animation to Lenis' own lerp.
     private SNAP_DURATION = 1.7;
 
-    private readonly ALIGN_DURATION = 0.6;
+    private ALIGN_DURATION = 0.6;
+
+    private WHEEL_DURATION = 0.8;
 
     private readonly WHEEL_THRESHOLD = 2;
 
@@ -172,10 +205,31 @@ class ScrollManager {
 
     private readonly MAGNET_DISTANCE = 0;
 
-    private readonly EASING = (t: number) =>
-        t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+    // softness of the start and the end of snaps and aligns, see createEasing
+    private readonly SNAP_SOFTNESS = 3;
 
-    private readonly ALIGN_EASING = (t: number) => 1 - Math.pow(1 - t, 2);
+    // wheel notches restart the animation on every notch, so it stays shorter
+    private readonly WHEEL_SOFTNESS = 2;
+
+    // a wheel notch never starts slower than 1.5x the average speed of its
+    // move; from rest a zero start slope delays the first movement by ~200 ms
+    private readonly WHEEL_MIN_SLOPE = 1.5;
+
+    // A programmatic scroll replaces Lenis' running animation and would start
+    // from zero speed, which shows up as a jolt when the page is already
+    // moving. Moves therefore start at the current speed (px/s, signed),
+    // sampled on Lenis' frame clock.
+    private scrollVelocity = 0;
+
+    private velocitySampleY = 0;
+
+    private velocitySampleTime = 0;
+
+    private readonly VELOCITY_STALE_MS = 64;
+
+    private readonly MAX_START_SLOPE = 2;
+
+    private readonly MIN_MATCHED_DURATION = 0.15;
 
     private get viewportHeight() {
         if (this.viewportHeightCache === null) {
@@ -317,6 +371,9 @@ class ScrollManager {
             eventsTarget: window,
             autoRaf: true,
             overscroll: false,
+            duration: this.WHEEL_DURATION,
+            easing: createEasing(this.WHEEL_MIN_SLOPE, this.WHEEL_SOFTNESS),
+            virtualScroll: this.handleVirtualScroll,
             syncTouch: true,
             syncTouchLerp: 0.075,
             touchInertiaExponent: 1.7,
@@ -429,6 +486,12 @@ class ScrollManager {
         this.wrapper = null;
 
         this.previousScrollY = 0;
+
+        this.scrollVelocity = 0;
+
+        this.velocitySampleY = 0;
+
+        this.velocitySampleTime = 0;
 
         this.clearUncontrolledAlignment();
     }
@@ -696,18 +759,9 @@ class ScrollManager {
 
         const clampedTargetY = Math.min(Math.max(targetY, 0), this.lenis.limit);
 
-        this.snapTo(
-            clampedTargetY,
-            this.ALIGN_DURATION,
-            () => {
-                this.markUncontrolledAligned(
-                    section,
-                    direction,
-                    clampedTargetY,
-                );
-            },
-            this.ALIGN_EASING,
-        );
+        this.snapTo(clampedTargetY, this.ALIGN_DURATION, () => {
+            this.markUncontrolledAligned(section, direction, clampedTargetY);
+        });
     }
 
     private resolveMove(direction: 1 | -1): {
@@ -796,16 +850,131 @@ class ScrollManager {
         this.snapTo(section, this.SNAP_DURATION);
     }
 
+    private sampleVelocity(y: number) {
+        const time = this.lenis?.time ?? 0;
+
+        const dt = time - this.velocitySampleTime;
+
+        // several scroll events inside one frame: keep the first sample
+        if (dt <= 0) {
+            return;
+        }
+
+        this.scrollVelocity =
+            dt < 100 ? ((y - this.velocitySampleY) / dt) * 1000 : 0;
+
+        this.velocitySampleY = y;
+
+        this.velocitySampleTime = time;
+    }
+
+    // current speed along a move of the given signed distance; 0 when the page
+    // is at rest, the sample is stale or the page moves away from the target
+    private getSpeedToward(distance: number) {
+        if (
+            Math.abs(distance) < 1 ||
+            performance.now() - this.velocitySampleTime > this.VELOCITY_STALE_MS
+        ) {
+            return 0;
+        }
+
+        return Math.max(this.scrollVelocity * Math.sign(distance), 0);
+    }
+
+    private getTargetY(target: ScrollTarget) {
+        if (!this.lenis) {
+            return 0;
+        }
+
+        const y =
+            typeof target === "number"
+                ? target
+                : this.lenis.animatedScroll + this.getRect(target).top;
+
+        return Math.min(Math.max(y, 0), this.lenis.limit);
+    }
+
+    // The start slope that matches the current speed grows with the duration.
+    // When it would exceed what the curve can do without overshoot, the move
+    // is shortened instead, so the speed stays continuous.
+    private planMove(target: ScrollTarget, duration: number) {
+        if (!this.lenis) {
+            return { duration, slope: 0 };
+        }
+
+        const distance = this.getTargetY(target) - this.lenis.animatedScroll;
+
+        const speed = this.getSpeedToward(distance);
+
+        if (speed === 0) {
+            return { duration, slope: 0 };
+        }
+
+        const fitted = Math.min(
+            duration,
+            Math.max(
+                (this.MAX_START_SLOPE * Math.abs(distance)) / speed,
+                this.MIN_MATCHED_DURATION,
+            ),
+        );
+
+        return {
+            duration: fitted,
+            slope: Math.min(
+                (speed * fitted) / Math.abs(distance),
+                this.MAX_START_SLOPE,
+            ),
+        };
+    }
+
+    // Lenis calls this right before it turns a wheel notch into scrollTo(): the
+    // curve of that animation is chosen here so it starts at the current speed
+    private handleVirtualScroll = ({
+        deltaY,
+        event,
+    }: {
+        deltaY: number;
+        event: Event;
+    }) => {
+        const lenis = this.lenis;
+
+        if (lenis && event.type.includes("wheel")) {
+            const distance =
+                Math.min(
+                    Math.max(lenis.targetScroll + deltaY, 0),
+                    lenis.limit,
+                ) - lenis.animatedScroll;
+
+            const speed = this.getSpeedToward(distance);
+
+            const slope = Math.max(
+                Math.min(
+                    (speed * this.WHEEL_DURATION) /
+                        Math.max(Math.abs(distance), 1),
+                    this.MAX_START_SLOPE,
+                ),
+                this.WHEEL_MIN_SLOPE,
+            );
+
+            // a fresh function per notch: an animation that is already
+            // running keeps its own curve
+            lenis.options.easing = createEasing(slope, this.WHEEL_SOFTNESS);
+        }
+
+        return true;
+    };
+
     private snapTo(
         target: ScrollTarget,
         duration: number,
         onComplete?: () => void,
-        easing = this.EASING,
     ) {
         if (!this.lenis || this.isControlAnimating) {
             return;
         }
         const touchSessionId = this.touchSessionId;
+
+        const plan = this.planMove(target, duration);
 
         this.isControlAnimating = true;
 
@@ -814,8 +983,8 @@ class ScrollManager {
         this.touchConsumed = true;
 
         this.lenis.scrollTo(target, {
-            duration,
-            easing,
+            duration: plan.duration,
+            easing: createEasing(plan.slope, this.SNAP_SOFTNESS),
             lock: true,
             force: true,
             onComplete: () => {
@@ -842,7 +1011,11 @@ class ScrollManager {
     }
 
     private snapToNearControlSection(direction: -1 | 0 | 1) {
-        if (!direction || this.isControlAnimating) {
+        if (
+            !direction ||
+            this.isControlAnimating ||
+            this.MAGNET_DISTANCE <= 0
+        ) {
             return;
         }
 
@@ -867,8 +1040,32 @@ class ScrollManager {
         }
     }
 
+    get snapDuration() {
+        return this.SNAP_DURATION * 1000;
+    }
+
     set snapDuration(duration: number) {
-        this.SNAP_DURATION = duration / 1000;
+        this.SNAP_DURATION = Math.max(duration, 16) / 1000;
+    }
+
+    get alignDuration() {
+        return this.ALIGN_DURATION * 1000;
+    }
+
+    set alignDuration(duration: number) {
+        this.ALIGN_DURATION = Math.max(duration, 16) / 1000;
+    }
+
+    get wheelDuration() {
+        return this.WHEEL_DURATION * 1000;
+    }
+
+    set wheelDuration(duration: number) {
+        this.WHEEL_DURATION = Math.max(duration, 16) / 1000;
+
+        if (this.lenis) {
+            this.lenis.options.duration = this.WHEEL_DURATION;
+        }
     }
 
     private handleWheel = (event: WheelEvent) => {
@@ -1060,6 +1257,8 @@ class ScrollManager {
         this.syncStructure();
 
         const currentScrollY = event.animatedScroll;
+
+        this.sampleVelocity(currentScrollY);
 
         const direction: -1 | 0 | 1 =
             currentScrollY > this.previousScrollY

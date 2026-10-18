@@ -26,7 +26,7 @@ export const ForthBlock = () => {
 
             <motion.div className={`col-center-4 w-full mb-10 ${t}`}>
                 <div className="row-center-4 w-full justify-center">
-                    <motion.h1 className="relative shrink-0 text-nowrap text-curr/80 text-[32px]! font-raj!">
+                    <motion.h1 className="relative shrink-0 text-nowrap text-curr/80 text-[32px]! font-ops!">
                         My Projects
                     </motion.h1>
                 </div>

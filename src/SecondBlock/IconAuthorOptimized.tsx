@@ -1203,7 +1203,7 @@ export const IconAuthor = ({
 
     const { isMobile } = useDevice();
 
-    const stroke = isMobile ? "stroke-curr" : "stroke-crm";
+    const stroke = isMobile ? "stroke-curr" : "stroke-curr";
 
     return (
         <div

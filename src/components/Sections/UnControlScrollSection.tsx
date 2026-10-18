@@ -9,7 +9,7 @@ type Props = {
 export const UnControlScrollSection = ({ id, style, children }: Props) => {
     return (
         <section
-            className="min-h-screen w-9/10 m-auto"
+            className="min-h-dvh w-9/10 m-auto"
             style={{
                 height: "auto",
                 transform: "none",

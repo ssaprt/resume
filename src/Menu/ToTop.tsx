@@ -12,7 +12,7 @@ export const ToTop = () => {
     return (
         <motion.div
             data-cursor="button"
-            data-color="alter-foreground"
+            data-color="curr"
             className="w-10 h-10 rounded-full cursor-pointer flex items-center justify-center"
             onMouseEnter={() => setHovered(true)}
             onMouseLeave={() => setHovered(false)}
@@ -42,7 +42,7 @@ export const ToTop = () => {
                            w-5
                            h-5
                            rounded-full
-                           bg-alter-fg/30
+                           bg-curr/30
                            flex
                            items-center
                            justify-center
@@ -52,7 +52,7 @@ export const ToTop = () => {
                            ease
                      `}
             >
-                <IconArrowUpToArc className={`w-3 h-3 text-alter-fg`} />
+                <IconArrowUpToArc className={`w-3 h-3 text-curr`} />
             </div>
         </motion.div>
     );

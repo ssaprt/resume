@@ -138,7 +138,7 @@ export const Items = () => {
 
     const grid = isMobile
         ? "grid-cols-[repeat(auto-fit,100%)] gap-8"
-        : "grid-cols-[repeat(auto-fit,25%)] gap-3";
+        : "grid-cols-[repeat(auto-fit,20%)] gap-3";
 
     return (
         <motion.div

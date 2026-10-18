@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { useScrollBlockMotion } from "../scroll/useScroll";
+import { useFiveBlockContextProvider } from "../FiveBlock/shared/useFiveBlockContextProvider";
 import {
     authorIconAnimationConfig,
     type AuthorIconHideAnimation,
@@ -57,7 +57,7 @@ export const ControllerIconAuthor = () => {
         hide: "erase",
     });
 
-    const { enterProgress, intersection } = useScrollBlockMotion(4);
+    const { enterProgress, intersection } = useFiveBlockContextProvider();
     const [view, setView] = useState(false);
 
     const isActiveRef = useRef(false);

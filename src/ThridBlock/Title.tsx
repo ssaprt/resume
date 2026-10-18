@@ -57,7 +57,7 @@ export const Title = () => {
             ) : (
                 <SplitText
                     text="Tech Stack"
-                    className="relative shrink-0 text-nowrap text-curr/80 text-[32px]! font-raj!"
+                    className="relative shrink-0 text-nowrap text-curr/80 text-[32px]! font-ops!"
                     left={{
                         x: -20,
                         y: 0,
