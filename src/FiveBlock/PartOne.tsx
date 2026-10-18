@@ -33,12 +33,16 @@ export const PartOne = () => {
     const overlay = isMobile
         ? "col-center-1 justify-start"
         : "col-start-1 justify-start";
-    const container = isMobile ? "col-center-1" : "row-start-1 pt-14";
+    const container = isMobile ? "col-center-1" : "row-start-1 pt-[50px]";
     const pTop = isMobile
         ? "px-3 py-2 gap-2 w-full justify-between"
         : "px-6 py-2 gap-6";
     const textTop = isMobile ? "text-[10px]!" : "text-sm!";
     const inner = isMobile ? "col-center-6" : "row-start-6";
+
+    const shadow = isMobile
+        ? "shadow-[0_0_0px_1px] shadow-curr/50 bg-curr/10"
+        : "shadow-[0_0_1px_1px] shadow-curr/30 bg-curr/3";
 
     return (
         <motion.div className={`w-auto h-full ${overlay} flex-1`}>
@@ -50,18 +54,19 @@ export const PartOne = () => {
                 </h1>
             )}
             <div className={`${container} flex-1`}>
-                <div className={`col-start-1 h-full`}>
+                <div className={`col-start-3 h-full`}>
                     <div
                         className={` h-auto
                     w-auto
                     min-w-0
                     row-center-1
                     
-                    border-1
-                    border-curr/20
+                   
                     rounded-[12px]
                     ${pTop}
-                    bg-app`}
+                    ${shadow}
+                
+                    `}
                     >
                         <span className={`text-curr ${textTop}`}>
                             {getAge(new Date(1995, 7, 25))} years old
@@ -90,11 +95,10 @@ export const PartOne = () => {
                     w-full
                     min-w-0
                    ${container}
-                    border-1
-                    border-curr/20
                     rounded-[12px]
                     p-6
-                    bg-app`}
+                        ${shadow}
+                    `}
                     >
                         <div className={`h-full min-w-0 w-full ${inner}`}>
                             <div className="col-center-4">
@@ -105,14 +109,16 @@ export const PartOne = () => {
 
                             <div className="col-end-4 w-auto flex-1">
                                 <div className="col-start-1 min-w-0 flex-1">
-                                    <div className="row-center-2">
+                                    <div className={`row-center-2`}>
                                         {isMobile ? (
-                                            <h1 className="text-curr! text-3xl! font-rob! mt-1">
-                                                Contact Me
+                                            <h1
+                                                className={`text-curr! text-3xl! font-rob! mt-1`}
+                                            >
+                                                Let's talk
                                             </h1>
                                         ) : (
                                             <SplitText
-                                                text="Contact Me"
+                                                text="Let's talk"
                                                 className="text-crm! text-3xl! font-rob!"
                                                 left={{
                                                     x: 0,
@@ -138,8 +144,12 @@ export const PartOne = () => {
                                                 }}
                                             />
                                         )}
-                                        <motion.div className="row-center-0 mt-2 ml-2">
-                                            <div className="relative mr-3 size-2">
+                                        <motion.div
+                                            className={`row-center-0 mt-1 ml-2`}
+                                        >
+                                            <div
+                                                className={`relative mr-3 size-2`}
+                                            >
                                                 <div className="avalible" />
                                                 <div className="avalible-ping" />
                                             </div>

@@ -3,7 +3,7 @@ import { Social } from "./Social";
 export const Socials = () => {
     return (
         <div className="col-end-2 w-full">
-            <div className="h-[1px] w-full border-b-1 border-b-curr/10" />
+            <div className="h-[1px] w-full border-b-1 border-b-curr/30" />
 
             <Social
                 iconName="github"
@@ -11,7 +11,7 @@ export const Socials = () => {
                 title="Github"
                 userName="ssaprt"
             />
-            <div className="h-[1px] w-full border-b-1 border-b-curr/10" />
+            <div className="h-[1px] w-full border-b-1 border-b-curr/30" />
 
             <Social
                 iconName="telegram"
@@ -19,7 +19,7 @@ export const Socials = () => {
                 title="Telegram"
                 userName="itauction"
             />
-            <div className="h-[1px] w-full border-b-1 border-b-curr/10" />
+            <div className="h-[1px] w-full border-b-1 border-b-curr/30" />
 
             <Social
                 iconName="whatsapp"
@@ -27,7 +27,7 @@ export const Socials = () => {
                 title="Whatsapp"
                 userName="itauction"
             />
-            <div className="h-[1px] w-full border-b-1 border-b-curr/10" />
+            <div className="h-[1px] w-full border-b-1 border-b-curr/30" />
 
             <Social
                 iconName="linkedin"
@@ -35,7 +35,7 @@ export const Socials = () => {
                 title="Linkedin"
                 userName="denis-ukhan-86b633422"
             />
-            <div className="h-[1px] w-full border-b-1 border-b-curr/10" />
+            <div className="h-[1px] w-full border-b-1 border-b-curr/30" />
         </div>
     );
 };

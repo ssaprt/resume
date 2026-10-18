@@ -32,7 +32,7 @@ export const Social = ({ iconName, link, title }: SocialProps) => {
     };
 
     return (
-        <div className="row-center-1 text-curr/80 w-full font-mono!">
+        <div className="row-center-1 text-curr/80 w-full font-mono! ">
             <div className="row-center-1 mr-auto">
                 <DynamicSvgIcon
                     name={iconName}

@@ -1,6 +1,6 @@
-import { DynamicSvgIcon } from "../components/Icons/DynamicSvgIcon";
 import SplitText from "../components/text/ScatterText";
 import { useDevice } from "../scroll/useDevice";
+import { Bottom } from "./Bottom";
 import { Fields } from "./Fields";
 import { useFiveBlockContextProvider } from "./shared/useFiveBlockContextProvider";
 
@@ -13,15 +13,14 @@ export const PartTwo = () => {
     return (
         <div className={`col-end-3 justify-end w-auto h-full ${style}`}>
             <div className="row-center-1 w-full justify-end">
-                <DynamicSvgIcon name="arr" className="size-4 fill-crm/60" />
                 {isMobile ? (
-                    <span className="w-full text-crm! text-xs font-raj! opacity-60 mt-auto max-w-2/4 pt-[1px]">
+                    <span className="w-full text-curr! text-xs font-raj! opacity-60 mt-auto text-right pt-[1px]">
                         Responds to text input
                     </span>
                 ) : (
                     <SplitText
                         text="Responds to text input"
-                        className="text-center text-crm! text-xs font-raj! opacity-60 mt-auto max-w-2/4 pt-[1px] mr-2"
+                        className="text-center text-curr! text-xs font-raj! opacity-60 mt-auto max-w-2/4 pt-[1px] mr-2"
                         left={{
                             x: 0,
                             y: 0,
@@ -45,6 +44,7 @@ export const PartTwo = () => {
             </div>
 
             <Fields />
+            {isMobile && <Bottom />}
         </div>
     );
 };

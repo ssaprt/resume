@@ -18,14 +18,13 @@ export const CV = () => {
         >
             <div
                 className="
-                    lg:border-1
-                    lg:border-curr/20
+                   
                     rounded-[12px]
                     px-0
                     py-0
                     lg:px-6
                     lg:py-2
-                    bg-app
+
                      shrink-0"
             >
                 <SplitText

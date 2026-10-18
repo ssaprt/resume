@@ -11,6 +11,7 @@ import {
 } from "react";
 
 import { ScrollToFuture } from "scroll-to-future";
+import { useDevice } from "../../scroll/useDevice";
 import styles from "./TextAreaWithScrollBar.module.scss";
 
 interface Props extends Omit<
@@ -153,9 +154,11 @@ export const TextAreaWithScrollBar = ({
         return () => observer.disconnect();
     }, []);
 
+    const { isMobile } = useDevice();
+    const text = isMobile ? "text-[16px]!" : "text-sm!";
+
     return (
         <div
-            data-lenis-prevent
             ref={containerRef}
             className={clsx(styles.textareaOverlay, className, "mt-3")}
             style={style}
@@ -185,12 +188,12 @@ export const TextAreaWithScrollBar = ({
             bg-transparent
             border-b-1
             pr-3
-            border-crm/50
+            border-curr/50
             text-curr
-            text-1xl!
+            ${text}
             font-jetbrains-mono
             w-full
-            placeholder:text-crm/50
+            placeholder:text-curr/50
             outline-none
             transition
             focus:border-curr

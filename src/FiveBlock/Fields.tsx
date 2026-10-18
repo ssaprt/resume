@@ -199,22 +199,68 @@ export const Fields = () => {
         status === "success";
 
     const overlay = isMobile
-        ? "w-full p-4"
+        ? "w-full min-w-0 p-10"
         : "w-auto min-w-[360px] ml-auto p-12";
+
+    const shadow = isMobile
+        ? "shadow-[0_0_0px_1px] shadow-curr/50 bg-curr/10"
+        : "shadow-[0_0_1px_1px] shadow-curr/30 bg-curr/3";
+
+    const text = isMobile ? "text-2xl!" : "text-3xl!";
 
     return (
         <FormProvider {...methods}>
             <form
                 noValidate
                 onSubmit={methods.handleSubmit(onSubmit)}
-                className={`${overlay} h-auto border-1 border-curr/20 rounded-[12px] col-start-8 bg-app`}
+                className={`${overlay} h-auto rounded-[12px] col-start-8 ${shadow}`}
             >
-                {!isMobile && <Icon />}
+                {isMobile && (
+                    <div
+                        className={`
+                                                       absolute
+                                                       left-10
+                                                       -top-[11px]
+                                                        z-2
+                                                       
+                                                        
+                                                        uppercase
+                                                       
+                                                        
+                                                        ${shadow}
+                                                        bg-app!
+                                                        text-curr
+                                                        text-sm
+                                                        rounded-[4px]
+                                                        px-2
+                            
+                                                    `}
+                    >
+                        <DynamicSvgIcon
+                            name="sort_left"
+                            className="size-[35px] fill-app absolute -left-[21px] -top-[7px] -z-2"
+                        />
+                        <DynamicSvgIcon
+                            name="sort_left"
+                            className="size-[35px] fill-curr/40 absolute -left-[21px] -top-[7px]"
+                        />
+                        <DynamicSvgIcon
+                            name="sort_left"
+                            className="size-[35px] fill-app absolute -right-[21px] -top-[7px] transform scale-x-[-1] -z-2"
+                        />
+                        <DynamicSvgIcon
+                            name="sort_left"
+                            className="size-[35px] fill-curr/40 absolute -right-[21px] -top-[7px] transform scale-x-[-1]"
+                        />
+                        Form
+                    </div>
+                )}
+                <Icon />
 
                 <div className="w-full col-end-1">
                     <SplitText
                         text="Write me your question"
-                        className="text-center text-crm! text-3xl! font-osw!"
+                        className={`text-center text-curr! ${text} font-osw!`}
                         left={{
                             x: 0,
                             y: 0,
@@ -237,7 +283,7 @@ export const Fields = () => {
 
                     <SplitText
                         text="- It's free"
-                        className="text-center text-crm! text-3xl! font-osw! opacity-80"
+                        className={`text-center text-curr! ${text} font-osw! opacity-80`}
                         left={{
                             x: 0,
                             y: 0,
@@ -259,7 +305,7 @@ export const Fields = () => {
                     />
                 </div>
 
-                <div className="w-full h-[1px] bg-crm/20" />
+                <div className="w-full h-[1px] bg-curr/20" />
 
                 <div className="row-center-4">
                     <Field
@@ -272,7 +318,7 @@ export const Fields = () => {
                         field="email"
                         type="email"
                         text="Your Email"
-                        placeholder="X4rGc@example.com"
+                        placeholder="ym@gmail.com"
                     />
                 </div>
 
@@ -292,8 +338,8 @@ export const Fields = () => {
                                     key={step.id}
                                     className="absolute top-3 h-px"
                                     style={{
-                                        left: `${12.5 + index * 25}%`,
-                                        width: "25%",
+                                        left: `calc(${12.5 + index * 25}% + 12px)`,
+                                        width: "calc(25% - 24px)",
                                     }}
                                 >
                                     <div className="absolute inset-0 bg-curr/20" />
@@ -323,7 +369,9 @@ export const Fields = () => {
                                             key={step.id}
                                             className="flex min-w-0 flex-col items-center gap-2"
                                         >
-                                            <div className="relative z-[1] flex size-6 shrink-0 items-center justify-center rounded-full bg-app">
+                                            <div
+                                                className={`relative z-[1] flex size-6 shrink-0 items-center justify-center rounded-full`}
+                                            >
                                                 <AnimatePresence
                                                     initial={false}
                                                     mode="sync"
@@ -357,7 +405,7 @@ export const Fields = () => {
                                                         "completed" ? (
                                                             <DynamicSvgIcon
                                                                 name="done"
-                                                                className="size-full fill-curr"
+                                                                className="size-7/10 fill-curr"
                                                             />
                                                         ) : stepState ===
                                                           "loading" ? (
@@ -368,11 +416,11 @@ export const Fields = () => {
                                                         ) : stepState ===
                                                           "error" ? (
                                                             <DynamicSvgIcon
-                                                                name="close"
+                                                                name="error"
                                                                 className="size-full fill-red-500"
                                                             />
                                                         ) : (
-                                                            <span className="size-2 rounded-full bg-curr/20" />
+                                                            <span className="size-2 rounded-full bg-curr" />
                                                         )}
                                                     </motion.div>
                                                 </AnimatePresence>

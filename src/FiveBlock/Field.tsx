@@ -1,5 +1,6 @@
 import { Controller, useFormContext } from "react-hook-form";
 import { TextAreaWithScrollBar } from "../components/textarea/TextAreaWithScrollBar";
+import { useDevice } from "../scroll/useDevice";
 
 type FormProps = {
     name: string;
@@ -33,17 +34,22 @@ export const Field = (props: FieldProps) => {
         register,
         formState: { errors },
     } = useFormContext<FormProps>();
+    const { isMobile } = useDevice();
+    const text = isMobile
+        ? "text-[16px]! placeholder:text-[12px]!"
+        : "text-sm!";
+    const h = isMobile ? "h-[72px]!" : "h-[72px]!";
 
     const id = `field-${props.field}`;
 
     const label = (
         <label
             htmlFor={id}
-            className="text-crm/90 text-[10px]! uppercase tracking-[0.2px] shrink-0"
+            className="text-curr/90 text-[10px]! uppercase tracking-[0.2px] shrink-0"
         >
             {props.text}
             {props.required && (
-                <span className="ml-1 text-nestjs" aria-hidden="true">
+                <span className="ml-1 text-curr" aria-hidden="true">
                     *
                 </span>
             )}
@@ -55,7 +61,7 @@ export const Field = (props: FieldProps) => {
             <div
                 data-cursor="write"
                 data-color="curr"
-                data-shadow="0 0 50px 20px"
+                data-shadow="0 0 80px 20px"
                 className="col-start-1 w-full"
             >
                 <div className="row-center-1">
@@ -89,7 +95,7 @@ export const Field = (props: FieldProps) => {
                             backValue={field.onChange}
                             required={props.required}
                             invalid={fieldState.invalid}
-                            textareaClassName="h-[72px]! pb-0! leading-5"
+                            textareaClassName={`${h} ${text} pb-0! leading-5`}
                             className={`w-full! ${
                                 fieldState.invalid ? "border-nestjs/50!" : ""
                             }`}
@@ -106,7 +112,7 @@ export const Field = (props: FieldProps) => {
         <div
             data-cursor="write"
             data-color="curr"
-            data-shadow="0 0 50px 20px"
+            data-shadow="0 0 80px 20px"
             className="col-start-1 w-full"
         >
             {label}
@@ -117,12 +123,12 @@ export const Field = (props: FieldProps) => {
                     border-b-1
                     pb-2
                     pt-3
-                    border-crm/50
+                    border-curr/50
                     text-curr
-                    text-1xl!
+                    ${text}
                     font-jetbrains-mono
                     w-full
-                    placeholder:text-crm/50
+                    placeholder:text-curr/50
                     outline-none
                     transition
                     focus:border-curr
@@ -132,10 +138,10 @@ export const Field = (props: FieldProps) => {
                     disabled:bg-transparent
                     aria-invalid:border-nestjs
                     autofill:bg-transparent
-                    autofill:text-crm
+                    autofill:text-curr
                     [&:-webkit-autofill]:[-webkit-text-fill-color:var(--curr)]
                     [&:-webkit-autofill]:[transition-delay:9999s]
-                    [&:-webkit-autofill]:[box-shadow:0_0_0_1000px_var(--background)_inset]
+                    [&:-webkit-autofill]:[box-shadow:0_0_0_1000px_rgba(0,0,0,0)_inset]
                     ${error ? "border-nestjs" : ""}
                 `}
                 type={props.type ?? "text"}

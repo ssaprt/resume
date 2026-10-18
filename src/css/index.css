@@ -315,7 +315,7 @@ span {
 
     -webkit-mask-repeat: repeat;
     mask-repeat: repeat;
-
+    opacity: 1;
     -webkit-mask-size: 60px 60px;
     mask-size: 60px 60px;
 }
