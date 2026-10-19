@@ -38,14 +38,28 @@ export const Tilt = ({
     });
 
     const animationFrameRef = useRef<number | null>(null);
+    const startAnimationRef = useRef<(() => void) | null>(null);
+
+    const bsh = `0px 0px 3px -1px var(--${color})`;
+    const bshHover = `0px 0px 34px -20px var(--${color})`;
 
     useEffect(() => {
         const animate = () => {
+            animationFrameRef.current = null;
+
             const current = currentRotation.current;
             const target = targetRotation.current;
 
-            current.x += (target.x - current.x) * tiltSpeed;
-            current.y += (target.y - current.y) * tiltSpeed;
+            const deltaX = target.x - current.x;
+            const deltaY = target.y - current.y;
+
+            if (Math.abs(deltaX) <= 0.01 && Math.abs(deltaY) <= 0.01) {
+                current.x = target.x;
+                current.y = target.y;
+            } else {
+                current.x += deltaX * tiltSpeed;
+                current.y += deltaY * tiltSpeed;
+            }
 
             const element = tiltRef.current;
 
@@ -57,15 +71,29 @@ export const Tilt = ({
                 `;
             }
 
-            animationFrameRef.current = requestAnimationFrame(animate);
+            if (
+                Math.abs(target.x - current.x) > 0.01 ||
+                Math.abs(target.y - current.y) > 0.01
+            ) {
+                animationFrameRef.current = requestAnimationFrame(animate);
+            }
         };
 
-        animationFrameRef.current = requestAnimationFrame(animate);
+        const startAnimation = () => {
+            if (animationFrameRef.current === null) {
+                animationFrameRef.current = requestAnimationFrame(animate);
+            }
+        };
+
+        startAnimationRef.current = startAnimation;
 
         return () => {
             if (animationFrameRef.current !== null) {
                 cancelAnimationFrame(animationFrameRef.current);
+                animationFrameRef.current = null;
             }
+
+            startAnimationRef.current = null;
         };
     }, [perspective, tiltSpeed]);
 
@@ -78,56 +106,62 @@ export const Tilt = ({
 
         const rect = element.getBoundingClientRect();
 
+        if (!rect.width || !rect.height) {
+            return;
+        }
+
         const x = (event.clientX - rect.left) / rect.width;
         const y = (event.clientY - rect.top) / rect.height;
 
-        const normalizedX = clamp(x * 2 - 1, -1, 1);
-        const normalizedY = clamp(y * 2 - 1, -1, 1);
+        targetRotation.current.x = -clamp(y * 2 - 1, -1, 1) * maxRotateX;
+        targetRotation.current.y = clamp(x * 2 - 1, -1, 1) * maxRotateY;
 
-        targetRotation.current = {
-            x: -normalizedY * maxRotateX,
-            y: normalizedX * maxRotateY,
-        };
+        startAnimationRef.current?.();
     };
 
     const handlePointerLeave = () => {
-        targetRotation.current = {
-            x: 0,
-            y: 0,
-        };
+        targetRotation.current.x = 0;
+        targetRotation.current.y = 0;
+
+        startAnimationRef.current?.();
     };
 
-    const bsh = `0px 0px 3px -1px var(--${color})`;
-    const bshHover = `0px 0px 34px -20px var(--${color})`;
+    const handleHoverStart = () => {
+        const element = tiltRef.current;
+
+        if (element) {
+            element.style.boxShadow = bshHover;
+        }
+    };
+
+    const handleHoverEnd = () => {
+        const element = tiltRef.current;
+
+        if (element) {
+            element.style.boxShadow = bsh;
+        }
+    };
 
     return (
         <motion.div
+            ref={wrapperRef}
             className="relative w-content h-content"
             data-cursor="magnetic"
             data-color={color}
-            ref={(element) => {
-                wrapperRef.current = element;
-            }}
             onPointerMove={handlePointerMove}
             onPointerLeave={handlePointerLeave}
         >
             <motion.div
                 ref={tiltRef}
                 className={`relative overflow-hidden ${className} before:content-['']
-                before:absolute
-                before:w-full
-                before:h-full
-                before:bottom-0
-                before:left-0
-                hover:before:bg-current/3 before:-z-10`}
-                onHoverStart={(e) => {
-                    (e.target as HTMLDivElement).style.boxShadow = bshHover;
-                    (e.target as HTMLDivElement).style.transition =
-                        "box-shadow 0.37s ease-in-out";
-                }}
-                onHoverEnd={(e) =>
-                    ((e.target as HTMLDivElement).style.boxShadow = bsh)
-                }
+                    before:absolute
+                    before:w-full
+                    before:h-full
+                    before:bottom-0
+                    before:left-0
+                    hover:before:bg-current/3 before:-z-10`}
+                onHoverStart={handleHoverStart}
+                onHoverEnd={handleHoverEnd}
                 style={
                     {
                         transformStyle: "preserve-3d",
@@ -135,6 +169,7 @@ export const Tilt = ({
                         willChange: "transform",
                         "--color": `var(--${color})`,
                         boxShadow: bsh,
+                        transition: "box-shadow 0.37s ease-in-out",
                     } as CSSProperties
                 }
             >

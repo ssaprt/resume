@@ -14,7 +14,7 @@ export const GoPrev = () => {
     const opacity = useTransform(enterProgress, [inputStart, inputEnd], [0, 1]);
     const y = useTransform(enterProgress, [inputStart, inputEnd], [-230, 0]);
 
-    const h = isMobile ? "h-6" : "h-10";
+    const h = isMobile ? "h-6" : "h-6";
     return (
         <motion.div
             ref={ref}

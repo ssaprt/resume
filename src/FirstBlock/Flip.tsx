@@ -46,6 +46,7 @@ export const Flip = () => {
                         assetName="one"
                         path="/one.glb"
                         autorotate
+                        enabled
                         autorotateSpeed={15}
                         rotationZ={rotationZ}
                         returnSpeed={1}

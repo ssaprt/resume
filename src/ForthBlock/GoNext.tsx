@@ -6,7 +6,7 @@ import { useScrollTransform } from "../scroll/useScrollTransform";
 export const GoNext = () => {
     const { ref, bottom } = useScrollElement();
 
-    const opacity = useScrollTransform(bottom, [1, 0.85], [1, 0]);
+    const opacity = useScrollTransform(bottom, [1, 0.5], [1, 0]);
 
     return (
         <motion.div
@@ -18,7 +18,7 @@ export const GoNext = () => {
                 relative
                 mt-10 mx-auto
                 w-40
-                h-20
+                h-10
                 
                 cursor-pointer"
         >
@@ -26,7 +26,7 @@ export const GoNext = () => {
                 className="
                absolute
                 w-[3px]
-                h-20
+                h-10
                 left-1/2
                 transform
                 -translate-x-1/2

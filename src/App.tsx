@@ -12,6 +12,7 @@ import { ForthBlock } from "./ForthBlock/ForthBlock";
 import { GlitchTransition } from "./GlitchTransition";
 import { Loader } from "./Loader/Loader";
 import { Menu } from "./Menu/Menu";
+import { TopRight } from "./Menu/TopRight/TopRight";
 import { scrollManager } from "./scroll/ScrollManager";
 import { useDevice } from "./scroll/useDevice";
 import { SecondBlock } from "./SecondBlock/SecondBlock";
@@ -27,16 +28,27 @@ function App() {
 
     useEffect(() => {
         scrollManager.init();
-        scrollManager.snapDuration = 1700;
 
         return () => {
             scrollManager.destroy();
         };
     }, []);
 
+    useEffect(() => {
+        scrollManager.snapDuration = isDesktop ? 1700 : 1000;
+    }, [isDesktop]);
+
     const handlePreloadComplete = useCallback(() => {
         setModelsPreloaded(true);
     }, []);
+
+    useEffect(() => {
+        if (!modelsPreloaded) {
+            return;
+        }
+
+        scrollManager.restorePosition();
+    }, [modelsPreloaded]);
 
     return (
         <>
@@ -105,6 +117,42 @@ function App() {
             )}
 
             <Menu />
+            <TopRight
+                viewLinks={[
+                    {
+                        label: "RUS",
+                        href: "/cv/resume-rus.pdf",
+                        target: "_blank",
+                    },
+                    {
+                        label: "ENG",
+                        href: "/cv/resume-eng.pdf",
+                        target: "_blank",
+                    },
+                    {
+                        label: "UKR",
+                        href: "/cv/resume-ukr.pdf",
+                        target: "_blank",
+                    },
+                ]}
+                downloadLinks={[
+                    {
+                        label: "RUS",
+                        href: "/cv/resume-rus.pdf",
+                        download: true,
+                    },
+                    {
+                        label: "ENG",
+                        href: "/cv/resume-eng.pdf",
+                        download: true,
+                    },
+                    {
+                        label: "UKR",
+                        href: "/cv/resume-ukr.pdf",
+                        download: true,
+                    },
+                ]}
+            />
 
             <motion.div
                 className="pointer-events-none fixed inset-0 z-[9999]"

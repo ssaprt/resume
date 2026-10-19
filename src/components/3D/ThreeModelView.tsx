@@ -19,6 +19,7 @@ type ThreeModelViewProps = {
     autorotate?: boolean;
     autorotateSpeed?: number;
     returnSpeed?: number;
+    enabled?: boolean;
     camera: {
         position: [number, number, number];
         fov: number;
@@ -35,6 +36,7 @@ type ViewControlsProps = {
     domElement: HTMLElement;
     interactionRef: InteractionRef;
     returnSpeed: number;
+    enabled: boolean;
 };
 
 const INITIAL_TARGET = new THREE.Vector3(0, 0, 0);
@@ -43,8 +45,10 @@ const ViewControls = ({
     domElement,
     interactionRef,
     returnSpeed,
+    enabled,
 }: ViewControlsProps) => {
     const { isDesktop } = useDevice();
+    const isEnabled = enabled && isDesktop;
     const camera = useThree((state) => state.camera);
 
     const controlsRef = useRef<OrbitControlsImpl | null>(null);
@@ -221,7 +225,7 @@ const ViewControls = ({
             ref={controlsRef}
             camera={camera}
             domElement={domElement}
-            enabled={isDesktop}
+            enabled={isEnabled}
             enableDamping
             dampingFactor={0.08}
             enableZoom={false}
@@ -243,6 +247,7 @@ export const ThreeModelView = ({
     autorotateSpeed = 20,
     returnSpeed = 1,
     camera,
+    enabled = false,
 }: ThreeModelViewProps) => {
     const [viewElement, setViewElement] = useState<HTMLElement | null>(null);
 
@@ -276,6 +281,7 @@ export const ThreeModelView = ({
                         domElement={viewElement}
                         interactionRef={interactionRef}
                         returnSpeed={returnSpeed}
+                        enabled={enabled}
                     />
                 )}
 

@@ -26,7 +26,7 @@ export const FiveBlockProvider = ({
     );
 
     const p = isMobile
-        ? "col-center-4 p-0 py-20"
+        ? "col-center-4 p-0 py-20 pb-0"
         : "row-center-4 p-10 justify-center";
 
     return (

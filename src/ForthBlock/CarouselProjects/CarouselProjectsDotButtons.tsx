@@ -1,6 +1,8 @@
 import { motion, useAnimationControls } from "framer-motion";
 import type { ComponentPropsWithRef } from "react";
 import { useEffect, useMemo, useRef } from "react";
+import { colors } from "../../ThridBlock/config";
+import { useThridBlockContext } from "../../ThridBlock/useThridBlockContext";
 import { getCarouselDotCount, resolveDotSize } from "./getCarouselDotCount";
 
 type DotButtonProps = ComponentPropsWithRef<"button">;
@@ -38,6 +40,8 @@ export const CarouselProjectsDots = ({
     dotSize,
 }: Props) => {
     const controls = useAnimationControls();
+    const { colorName } = useThridBlockContext();
+    const color = colors[colorName];
 
     const rotation = useRef(0);
     const initialized = useRef(false);
@@ -110,10 +114,10 @@ export const CarouselProjectsDots = ({
 
     const circleSize = radius * 2;
 
-    return null;
-
     return (
-        <div className="pointer-events-none absolute inset-0 flex items-center justify-center top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+        <div
+            className={`pointer-events-none inset-0 flex items-center justify-center ${color.text}`}
+        >
             <motion.div
                 className="relative"
                 style={{
@@ -139,7 +143,7 @@ export const CarouselProjectsDots = ({
                                 (index % slideCount) + 1
                             }`}
                             className={`pointer-events-auto absolute rounded-full ${
-                                active ? "bg-alter-fg" : "bg-alter-fg/30"
+                                active ? "bg-current" : "bg-current/30"
                             }`}
                             style={{
                                 width: size,

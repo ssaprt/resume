@@ -1,12 +1,12 @@
 import { motion } from "framer-motion";
 import { useDevice } from "../scroll/useDevice";
-import { Items } from "./Items";
+import { ItemsTest } from "./ItemsTest";
 import { ThridBlockProvider } from "./Provider";
 import { Title } from "./Title";
 
 export const ThridBlock = () => {
     const { isMobile } = useDevice();
-    const p = isMobile ? "p-4" : "p-20";
+    const p = isMobile ? "p-4 pb-20" : "p-20 pb-40";
 
     return (
         <ThridBlockProvider>
@@ -15,7 +15,7 @@ export const ThridBlock = () => {
 
                 <Title />
 
-                <Items />
+                <ItemsTest />
             </motion.div>
         </ThridBlockProvider>
     );

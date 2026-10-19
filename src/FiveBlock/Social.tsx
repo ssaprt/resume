@@ -9,30 +9,82 @@ type SocialProps = {
     userName?: string;
 };
 
+type CopyStatus = "copied" | "error" | null;
+
+const copyWithFallback = (text: string): boolean => {
+    const textarea = document.createElement("textarea");
+
+    textarea.value = text;
+    textarea.readOnly = true;
+
+    Object.assign(textarea.style, {
+        position: "fixed",
+        top: "0",
+        left: "0",
+        width: "1px",
+        height: "1px",
+        padding: "0",
+        border: "0",
+        opacity: "0",
+        fontSize: "16px",
+        pointerEvents: "none",
+    });
+
+    document.body.appendChild(textarea);
+
+    try {
+        textarea.focus();
+        textarea.select();
+        textarea.setSelectionRange(0, text.length);
+
+        return document.execCommand("copy");
+    } catch {
+        return false;
+    } finally {
+        textarea.remove();
+    }
+};
+
 export const Social = ({ iconName, link, title }: SocialProps) => {
-    const [copied, setCopied] = useState(false);
+    const [copyStatus, setCopyStatus] = useState<CopyStatus>(null);
 
     useEffect(() => {
-        if (!copied) return;
+        if (!copyStatus) return;
 
         const timer = setTimeout(() => {
-            setCopied(false);
+            setCopyStatus(null);
         }, 1200);
 
         return () => clearTimeout(timer);
-    }, [copied]);
+    }, [copyStatus]);
 
     const handleCopy = async () => {
+        setCopyStatus(null);
+
         try {
-            await navigator.clipboard.writeText(link);
-            setCopied(true);
+            if (
+                window.isSecureContext &&
+                typeof navigator.clipboard?.writeText === "function"
+            ) {
+                await navigator.clipboard.writeText(link);
+                setCopyStatus("copied");
+                return;
+            }
+
+            setCopyStatus(copyWithFallback(link) ? "copied" : "error");
         } catch (error) {
-            console.error("Failed to copy:", error);
+            const copied = copyWithFallback(link);
+
+            if (!copied) {
+                console.error("Failed to copy:", error);
+            }
+
+            setCopyStatus(copied ? "copied" : "error");
         }
     };
 
     return (
-        <div className="row-center-1 text-curr/80 w-full font-mono! ">
+        <div className="row-center-1 text-curr/80 w-full font-mono!">
             <div className="row-center-1 mr-auto">
                 <DynamicSvgIcon
                     name={iconName}
@@ -50,7 +102,9 @@ export const Social = ({ iconName, link, title }: SocialProps) => {
             >
                 <motion.button
                     type="button"
-                    animate={{ scale: copied ? 0.95 : 1 }}
+                    animate={{
+                        scale: copyStatus === "copied" ? 0.95 : 1,
+                    }}
                     transition={{
                         type: "spring",
                         stiffness: 180,
@@ -59,7 +113,7 @@ export const Social = ({ iconName, link, title }: SocialProps) => {
                     }}
                     onClick={handleCopy}
                     aria-label="Copy link"
-                    className="row-center-1 shrink-0 p-[2px] transform transition-transform duration-300 hover:-translate-y-1"
+                    className="row-center-1 shrink-0 cursor-pointer touch-manipulation p-[2px] transform transition-transform duration-300 hover:-translate-y-1"
                 >
                     <DynamicSvgIcon
                         name="copy"
@@ -68,15 +122,20 @@ export const Social = ({ iconName, link, title }: SocialProps) => {
                 </motion.button>
 
                 <AnimatePresence>
-                    {copied && (
+                    {copyStatus && (
                         <motion.span
+                            key={copyStatus}
                             initial={{ opacity: 0, y: 5, scale: 0.9 }}
                             animate={{ opacity: 1, y: 0, scale: 1 }}
                             exit={{ opacity: 0, y: -3, scale: 0.95 }}
-                            transition={{ duration: 0.18, ease: "easeOut" }}
+                            transition={{
+                                duration: 0.18,
+                                ease: "easeOut",
+                            }}
+                            aria-live="polite"
                             className="pointer-events-none absolute bottom-full left-1/2 z-50 mb-2 -translate-x-1/2 whitespace-nowrap rounded-md border border-white/10 bg-curr px-2 py-1 text-[11px] text-app shadow-lg"
                         >
-                            Copied
+                            {copyStatus === "copied" ? "Copied" : "Copy failed"}
                         </motion.span>
                     )}
                 </AnimatePresence>

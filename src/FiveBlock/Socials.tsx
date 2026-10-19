@@ -36,6 +36,14 @@ export const Socials = () => {
                 userName="denis-ukhan-86b633422"
             />
             <div className="h-[1px] w-full border-b-1 border-b-curr/30" />
+
+            <Social
+                iconName="mail"
+                link="mailto:fasingtondenzel@gmail.com"
+                title="Email"
+                userName="fasingtondenzel@gmail.com"
+            />
+            <div className="h-[1px] w-full border-b-1 border-b-curr/30" />
         </div>
     );
 };

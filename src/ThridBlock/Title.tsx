@@ -36,7 +36,7 @@ export const Title = () => {
 
     const text = isMobile ? "text-[1.8em]!" : "text-[32px]!";
     const width = isMobile ? "w-full" : "w-2/3";
-    const mb = isMobile ? "mb-6 col-center-1" : "mb-10 col-center-4";
+    const mb = isMobile ? "mb-6 col-center-1" : "mb-0 col-center-4";
 
     const handleSelect = (index: number) => {
         setActive(index);
@@ -73,6 +73,7 @@ export const Title = () => {
                         opacity: 0,
                     }}
                     stagger={0.15}
+                    enterOnlyFromTop
                     as="h1"
                     scroll={{ leaveProgress, leaveDirection }}
                 />
@@ -91,21 +92,22 @@ export const Title = () => {
                         text="An interactive tour of my core tech stack and the tools I use in my projects"
                         className={`text-center font-outfit! text-curr! ${text} opacity-80`}
                         left={{
-                            x: -80,
-                            y: 50,
+                            x: -20,
+                            y: 0,
                             rotate: 0,
                             scale: 0,
                             opacity: 0,
                         }}
                         right={{
-                            x: 80,
-                            y: 50,
+                            x: 20,
+                            y: 0,
                             rotate: 0,
                             scale: 0,
                             opacity: 0,
                         }}
-                        stagger={0.2}
+                        stagger={0.15}
                         as="h1"
+                        enterOnlyFromTop
                         scroll={{ leaveProgress, leaveDirection }}
                     />
                 )}

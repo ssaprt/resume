@@ -115,8 +115,10 @@ type SplitTextProps = {
     left?: Partial<SideMotion>;
     right?: Partial<SideMotion>;
     trackParent?: boolean;
+    enterOnlyFromTop?: boolean;
     split?: number;
     dir?: -1 | 0 | 1;
+    once?: boolean;
     scroll?: {
         leaveProgress: MotionValue<number>;
         leaveDirection: MotionValue<number>;
@@ -131,7 +133,9 @@ export const SplitText = ({
     left,
     right,
     trackParent = true,
+    enterOnlyFromTop = false,
     split = 0.5,
+    once = false,
     dir = 0,
     scroll,
 }: SplitTextProps) => {
@@ -145,6 +149,24 @@ export const SplitText = ({
     const leaveDirection = scroll?.leaveDirection ?? ownDirection;
     const external = scroll !== undefined;
     const splitPoint = clamp(split, 0, 1);
+
+    const maxProgress = useRef(0);
+
+    const animationProgress = useTransform(
+        [leaveProgress, leaveDirection],
+        ([value, direction]: number[]) => {
+            if (once) {
+                maxProgress.current = Math.max(maxProgress.current, value);
+                return maxProgress.current;
+            }
+
+            if (!enterOnlyFromTop) {
+                return value;
+            }
+
+            return direction < 0 ? 0 : value;
+        },
+    );
 
     const rootRef = useRef<HTMLElement | null>(null);
     const [placements, setPlacements] = useState<Placement[]>([]);
@@ -286,7 +308,7 @@ export const SplitText = ({
                         <SplitLetter
                             key={index}
                             char={char}
-                            progress={leaveProgress}
+                            progress={animationProgress}
                             direction={leaveDirection}
                             start={start}
                             side={placement.isLeft ? leftSide : rightSide}

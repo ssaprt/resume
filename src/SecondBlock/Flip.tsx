@@ -43,6 +43,7 @@ export const Flip = ({ bottom }: { bottom: number }) => {
                         assetName="two"
                         path="/two.glb"
                         autorotate
+                        enabled
                         autorotateSpeed={15}
                         rotationZ={rotationZ}
                         camera={{

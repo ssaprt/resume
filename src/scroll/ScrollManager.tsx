@@ -81,7 +81,6 @@ const emptyElementState: ElementScrollState = {
 
 const clamp = (value: number) => Math.min(Math.max(value, 0), 1);
 
-// P(Bin(n, t) >= k): the regularized incomplete beta function in closed form
 const binomialTail = (n: number, k: number, t: number) => {
     let sum = 0;
     let coefficient = 1;
@@ -97,12 +96,6 @@ const binomialTail = (n: number, k: number, t: number) => {
     return sum;
 };
 
-// "Mountain" curve: the speed is a bell, zero at both ends together with the
-// acceleration, so the start and the end are as soft as `softness` makes them
-// (2 = quintic smootherstep, 3 = septic, 4 = nonic; higher = longer soft feet
-// and a steeper middle). `startSlope` is the speed at t = 0 in units of the
-// average speed of the move: the move starts at that speed and then follows the
-// same bell. 0 = start from rest, at most 2, never overshoots.
 const createEasing = (startSlope: number, softness: number) => (t: number) => {
     const bell = binomialTail(2 * softness + 1, softness + 1, t);
 
@@ -181,7 +174,17 @@ class ScrollManager {
     private touchLastY = 0;
     private touchSessionId = 0;
 
+    private readonly SCROLL_POSITION_KEY = "portfolio-scroll-position";
+
+    private isRestoringPosition = false;
+
     private touchConsumed = false;
+
+    private touchStartX = 0;
+
+    private touchAxis: "horizontal" | "vertical" | null = null;
+
+    private readonly TOUCH_AXIS_THRESHOLD = 8;
 
     private alignedUncontrolledSection: HTMLElement | null = null;
 
@@ -190,9 +193,6 @@ class ScrollManager {
     private alignedUncontrolledY: number | null = null;
     private wrapper: HTMLElement | null = null;
 
-    // seconds; the accessors snapDuration / alignDuration / wheelDuration take
-    // milliseconds. A duration of 0 must never reach Lenis: it silently
-    // switches the animation to Lenis' own lerp.
     private SNAP_DURATION = 1.7;
 
     private ALIGN_DURATION = 0.6;
@@ -205,20 +205,12 @@ class ScrollManager {
 
     private readonly MAGNET_DISTANCE = 0;
 
-    // softness of the start and the end of snaps and aligns, see createEasing
     private readonly SNAP_SOFTNESS = 3;
 
-    // wheel notches restart the animation on every notch, so it stays shorter
     private readonly WHEEL_SOFTNESS = 2;
 
-    // a wheel notch never starts slower than 1.5x the average speed of its
-    // move; from rest a zero start slope delays the first movement by ~200 ms
     private readonly WHEEL_MIN_SLOPE = 1.5;
 
-    // A programmatic scroll replaces Lenis' running animation and would start
-    // from zero speed, which shows up as a jolt when the page is already
-    // moving. Moves therefore start at the current speed (px/s, signed),
-    // sampled on Lenis' frame clock.
     private scrollVelocity = 0;
 
     private velocitySampleY = 0;
@@ -293,8 +285,6 @@ class ScrollManager {
         this.structureDirty = true;
     };
 
-    // takeRecords() makes pending DOM changes visible synchronously, so a
-    // layout effect that runs right after a commit still sees new sections
     private syncStructure() {
         if (
             this.structureObserver &&
@@ -343,6 +333,102 @@ class ScrollManager {
         });
     }
 
+    private saveScrollPosition = () => {
+        if (!this.lenis) {
+            return;
+        }
+
+        try {
+            sessionStorage.setItem(
+                this.SCROLL_POSITION_KEY,
+                String(this.lenis.scroll),
+            );
+        } catch {
+            return;
+        }
+    };
+
+    private handleVisibilityChange = () => {
+        if (document.visibilityState === "hidden") {
+            this.saveScrollPosition();
+        }
+    };
+
+    restorePosition = () => {
+        if (!this.lenis) {
+            return;
+        }
+
+        let savedPosition: string | null;
+
+        try {
+            savedPosition = sessionStorage.getItem(this.SCROLL_POSITION_KEY);
+        } catch {
+            return;
+        }
+
+        if (savedPosition === null) {
+            return;
+        }
+
+        const savedY = Number(savedPosition);
+
+        if (!Number.isFinite(savedY) || savedY < 0) {
+            return;
+        }
+
+        requestAnimationFrame(() => {
+            if (!this.lenis) {
+                return;
+            }
+
+            this.lenis.resize();
+            this.syncStructure();
+
+            const targetY = Math.min(savedY, this.lenis.limit);
+
+            this.isRestoringPosition = true;
+
+            this.lenis.scrollTo(targetY, {
+                immediate: true,
+                force: true,
+            });
+
+            this.invalidateCache();
+
+            requestAnimationFrame(() => {
+                if (!this.lenis) {
+                    this.isRestoringPosition = false;
+                    return;
+                }
+
+                this.isRestoringPosition = false;
+
+                const y = this.lenis.scroll;
+
+                this.previousScrollY = y;
+                this.scrollVelocity = 0;
+                this.velocitySampleY = y;
+                this.velocitySampleTime = this.lenis.time;
+
+                this.scrollState = {
+                    ...this.scrollState,
+                    y,
+                    progress: this.lenis.progress,
+                    velocity: 0,
+                    direction: 0,
+                    limit: this.lenis.limit,
+                    viewportHeight: this.viewportHeight,
+                    viewportWidth: this.viewportWidth,
+                };
+
+                this.updateElements();
+                this.updateBlockStates();
+                this.emit();
+            });
+        });
+    };
+
     init() {
         if (this.lenis) {
             return;
@@ -360,7 +446,6 @@ class ScrollManager {
 
         this.wrapper = wrapper;
 
-        // anything cached before the wrapper was known (viewport size) is void
         this.invalidateCache();
 
         deviceManager.init();
@@ -402,6 +487,13 @@ class ScrollManager {
             passive: true,
             capture: true,
         });
+
+        window.addEventListener("pagehide", this.saveScrollPosition);
+
+        document.addEventListener(
+            "visibilitychange",
+            this.handleVisibilityChange,
+        );
 
         this.structureObserver = new MutationObserver(this.markStructureDirty);
 
@@ -447,6 +539,13 @@ class ScrollManager {
         window.removeEventListener("touchmove", this.handleTouchMove, true);
 
         window.removeEventListener("touchend", this.handleTouchEnd, true);
+
+        window.removeEventListener("pagehide", this.saveScrollPosition);
+
+        document.removeEventListener(
+            "visibilitychange",
+            this.handleVisibilityChange,
+        );
 
         this.lenis.destroy();
 
@@ -524,8 +623,6 @@ class ScrollManager {
     unregisterElement(element: HTMLElement) {
         const item = this.elements.get(element);
 
-        // several hooks may observe the same element: drop it only when the
-        // last subscriber is gone, otherwise the others would stop updating
         if (item && item.listeners.size === 0) {
             this.elements.delete(element);
         }
@@ -581,7 +678,6 @@ class ScrollManager {
         this.syncStructure();
 
         if (this.scrollBlocks.length === 0) {
-            // keep the same array so useScrollBlocks consumers are not woken up
             if (this.blockStates.length > 0) {
                 this.blockStates = [];
             }
@@ -855,7 +951,6 @@ class ScrollManager {
 
         const dt = time - this.velocitySampleTime;
 
-        // several scroll events inside one frame: keep the first sample
         if (dt <= 0) {
             return;
         }
@@ -868,8 +963,6 @@ class ScrollManager {
         this.velocitySampleTime = time;
     }
 
-    // current speed along a move of the given signed distance; 0 when the page
-    // is at rest, the sample is stale or the page moves away from the target
     private getSpeedToward(distance: number) {
         if (
             Math.abs(distance) < 1 ||
@@ -894,9 +987,6 @@ class ScrollManager {
         return Math.min(Math.max(y, 0), this.lenis.limit);
     }
 
-    // The start slope that matches the current speed grows with the duration.
-    // When it would exceed what the curve can do without overshoot, the move
-    // is shortened instead, so the speed stays continuous.
     private planMove(target: ScrollTarget, duration: number) {
         if (!this.lenis) {
             return { duration, slope: 0 };
@@ -927,8 +1017,6 @@ class ScrollManager {
         };
     }
 
-    // Lenis calls this right before it turns a wheel notch into scrollTo(): the
-    // curve of that animation is chosen here so it starts at the current speed
     private handleVirtualScroll = ({
         deltaY,
         event,
@@ -936,6 +1024,10 @@ class ScrollManager {
         deltaY: number;
         event: Event;
     }) => {
+        if (event.type.includes("touch") && this.touchAxis === "horizontal") {
+            return false;
+        }
+
         const lenis = this.lenis;
 
         if (lenis && event.type.includes("wheel")) {
@@ -956,8 +1048,6 @@ class ScrollManager {
                 this.WHEEL_MIN_SLOPE,
             );
 
-            // a fresh function per notch: an animation that is already
-            // running keeps its own curve
             lenis.options.easing = createEasing(slope, this.WHEEL_SOFTNESS);
         }
 
@@ -1006,7 +1096,6 @@ class ScrollManager {
             },
         });
 
-        // scrollTo may move the scroll position: never reuse rects read before it
         this.invalidateCache();
     }
 
@@ -1147,10 +1236,12 @@ class ScrollManager {
         this.touchSessionId += 1;
         this.touchActive = true;
 
+        this.touchStartX = event.touches[0].clientX;
         this.touchStartY = event.touches[0].clientY;
 
         this.touchLastY = this.touchStartY;
 
+        this.touchAxis = null;
         this.touchConsumed = false;
     };
 
@@ -1160,6 +1251,28 @@ class ScrollManager {
         }
 
         if (!this.isSectionVisible()) {
+            return;
+        }
+
+        const currentX = event.touches[0].clientX;
+        const currentY = event.touches[0].clientY;
+
+        if (this.touchAxis === null) {
+            const deltaX = Math.abs(currentX - this.touchStartX);
+            const deltaY = Math.abs(currentY - this.touchStartY);
+
+            if (Math.max(deltaX, deltaY) < this.TOUCH_AXIS_THRESHOLD) {
+                return;
+            }
+
+            this.touchAxis = deltaX > deltaY ? "horizontal" : "vertical";
+        }
+
+        if (this.touchAxis === "horizontal") {
+            if (event.cancelable) {
+                event.preventDefault();
+            }
+
             return;
         }
 
@@ -1173,10 +1286,7 @@ class ScrollManager {
             return;
         }
 
-        const currentY = event.touches[0].clientY;
-
         const totalDelta = this.touchStartY - currentY;
-
         const stepDelta = this.touchLastY - currentY;
 
         this.touchLastY = currentY;
@@ -1260,12 +1370,13 @@ class ScrollManager {
 
         this.sampleVelocity(currentScrollY);
 
-        const direction: -1 | 0 | 1 =
-            currentScrollY > this.previousScrollY
-                ? 1
-                : currentScrollY < this.previousScrollY
-                  ? -1
-                  : 0;
+        const direction: -1 | 0 | 1 = this.isRestoringPosition
+            ? 0
+            : currentScrollY > this.previousScrollY
+              ? 1
+              : currentScrollY < this.previousScrollY
+                ? -1
+                : 0;
 
         if (
             this.alignedUncontrolledY !== null &&
@@ -1338,8 +1449,6 @@ class ScrollManager {
     refreshBlocks = () => {
         const recollected = this.syncStructure();
 
-        // every useScrollBlock* hook calls this on mount; within one commit the
-        // result is identical, so only the first call does the work
         if (!recollected && this.blocksRefreshed) {
             return;
         }

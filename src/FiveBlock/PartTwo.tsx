@@ -8,7 +8,7 @@ export const PartTwo = () => {
     const { leaveDirection, leaveProgress } = useFiveBlockContextProvider();
     const { isMobile } = useDevice();
 
-    const style = isMobile ? "mb-10" : "";
+    const style = isMobile ? "mb-0" : "";
 
     return (
         <div className={`col-end-3 justify-end w-auto h-full ${style}`}>

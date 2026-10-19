@@ -12,6 +12,7 @@
 @import "./tailwind-blocks.css";
 @import "./animations.css";
 @import "./pallet-projects.css";
+@import "./buttons.css";
 
 :root {
     --foreground: white;
@@ -126,7 +127,6 @@ body {
     text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    cursor: none;
     background: var(--background);
 }
 
@@ -225,10 +225,6 @@ body.custom-cursor-active * {
     cursor: none !important;
 }
 
-body * {
-    cursor: none !important;
-}
-
 /* Typography */
 
 h1 {
@@ -294,6 +290,9 @@ span {
 
 /* Grid pattern */
 
+.grid-bg {
+}
+
 .grid-bg::before {
     content: "";
     position: absolute;
@@ -310,8 +309,8 @@ span {
 /* Noise pattern */
 
 .pattern-noise {
-    -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='luminanceToAlpha'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
-    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='luminanceToAlpha'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+    -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='luminanceToAlpha'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='luminanceToAlpha'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
 
     -webkit-mask-repeat: repeat;
     mask-repeat: repeat;
@@ -329,12 +328,11 @@ span {
 /* Responsive cursor */
 
 @media (hover: hover) and (pointer: fine) {
-    html,
-    body {
-        cursor: none;
+    body.custom-cursor-active,
+    body.custom-cursor-active * {
+        cursor: none !important;
     }
 }
-
 .mobile-bg {
     position: fixed;
     inset: 0;

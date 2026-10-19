@@ -3,127 +3,17 @@ import { useLayoutEffect, useRef, useState } from "react";
 import { ThreeModelView } from "../components/3D/ThreeModelView";
 import { DynamicSvgIcon } from "../components/Icons/DynamicSvgIcon";
 import { useDevice } from "../scroll/useDevice";
-import { types } from "./config";
+import { colors, types, type CardName } from "./config";
 import { Tilt } from "./Tilt";
 import { useThridBlockContext } from "./useThridBlockContext";
-
-type CardName =
-    | "react"
-    | "next"
-    | "typescript"
-    | "nestjs"
-    | "php"
-    | "css"
-    | "html"
-    | "scss"
-    | "mysql"
-    | "postgresql"
-    | "restapi"
-    | "tailwind"
-    | "docker"
-    | "git";
 
 type Props = {
     type: string;
     name: CardName;
     description: string;
     progress?: number;
-    gridRef: React.RefObject<HTMLDivElement | null>;
-};
-
-const colors: Record<
-    CardName,
-    {
-        text: string;
-        bg: string;
-        border: string;
-        outline: string;
-    }
-> = {
-    react: {
-        text: "text-react",
-        bg: "bg-react",
-        border: "border-react/50",
-        outline: "outline-react",
-    },
-    next: {
-        text: "text-next",
-        bg: "bg-next",
-        border: "border-next/50",
-        outline: "outline-next",
-    },
-    typescript: {
-        text: "text-typescript",
-        bg: "bg-typescript",
-        border: "border-typescript/50",
-        outline: "outline-typescript",
-    },
-    nestjs: {
-        text: "text-nestjs",
-        bg: "bg-nestjs",
-        border: "border-nestjs/50",
-        outline: "outline-nestjs",
-    },
-    php: {
-        text: "text-php",
-        bg: "bg-php",
-        border: "border-php/50",
-        outline: "outline-php",
-    },
-    css: {
-        text: "text-css",
-        bg: "bg-css",
-        border: "border-css/50",
-        outline: "outline-css",
-    },
-    html: {
-        text: "text-html",
-        bg: "bg-html",
-        border: "border-html/50",
-        outline: "outline-html",
-    },
-    scss: {
-        text: "text-scss",
-        bg: "bg-scss",
-        border: "border-scss/50",
-        outline: "outline-scss",
-    },
-    mysql: {
-        text: "text-mysql",
-        bg: "bg-mysql",
-        border: "border-mysql/50",
-        outline: "outline-mysql",
-    },
-    postgresql: {
-        text: "text-postgresql",
-        bg: "bg-postgresql",
-        border: "border-postgresql/50",
-        outline: "outline-postgresql",
-    },
-    restapi: {
-        text: "text-restapi",
-        bg: "bg-restapi",
-        border: "border-restapi/50",
-        outline: "outline-restapi",
-    },
-    tailwind: {
-        text: "text-tailwind",
-        bg: "bg-tailwind",
-        border: "border-tailwind/50",
-        outline: "outline-tailwind",
-    },
-    docker: {
-        text: "text-docker",
-        bg: "bg-docker",
-        border: "border-docker/50",
-        outline: "outline-docker",
-    },
-    git: {
-        text: "text-git",
-        bg: "bg-git",
-        border: "border-git/50",
-        outline: "outline-git",
-    },
+    gridRef?: React.RefObject<HTMLDivElement | null>;
+    className?: string;
 };
 
 export const Card = ({
@@ -132,6 +22,7 @@ export const Card = ({
     description,
     progress = 0,
     gridRef,
+    className = "",
 }: Props) => {
     const { active } = useThridBlockContext();
 
@@ -157,7 +48,7 @@ export const Card = ({
 
     useLayoutEffect(() => {
         const card = cardRef.current;
-        const grid = gridRef.current;
+        const grid = gridRef?.current;
 
         if (!card || !grid) {
             return;
@@ -195,7 +86,7 @@ export const Card = ({
     return (
         <div
             ref={cardRef}
-            className={`relative ${h} w-full ${color.text}`}
+            className={`relative ${h} w-full ${color.text} ${className}`}
             style={
                 exit && position
                     ? {
@@ -380,6 +271,7 @@ export const Card = ({
                                 autorotateSpeed={15}
                                 returnSpeed={1}
                                 rotationZ={0}
+                                enabled={false}
                                 camera={{
                                     position: [12, 0, 0],
                                     fov: 24,
