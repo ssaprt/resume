@@ -9,6 +9,7 @@ export type ScrollState = {
     limit: number;
     viewportHeight: number;
     viewportWidth: number;
+    activeSectionIndex: number;
 };
 
 export type ElementScrollState = {
@@ -145,6 +146,7 @@ class ScrollManager {
         limit: 0,
         viewportHeight: 0,
         viewportWidth: 0,
+        activeSectionIndex: 0,
     };
 
     private sections: HTMLElement[] = [];
@@ -162,6 +164,10 @@ class ScrollManager {
     private cacheResetScheduled = false;
 
     private blocksRefreshed = false;
+
+    private scrollStopTimer: ReturnType<typeof setTimeout> | null = null;
+
+    private readonly SCROLL_STOP_DELAY = 150;
 
     private isControlAnimating = false;
 
@@ -202,7 +208,7 @@ class ScrollManager {
     private readonly WHEEL_THRESHOLD = 2;
 
     private readonly TOUCH_THRESHOLD = 0;
-
+    private controlAnimationId = 0;
     private readonly MAGNET_DISTANCE = 0;
 
     private readonly SNAP_SOFTNESS = 3;
@@ -258,6 +264,25 @@ class ScrollManager {
 
         return rect;
     }
+
+    private updateActiveSectionAfterScroll = () => {
+        this.scrollStopTimer = null;
+
+        this.syncStructure();
+
+        const activeSectionIndex = this.getCurrentSectionIndex();
+
+        if (activeSectionIndex === this.scrollState.activeSectionIndex) {
+            return;
+        }
+
+        this.scrollState = {
+            ...this.scrollState,
+            activeSectionIndex,
+        };
+
+        this.emit();
+    };
 
     private scheduleCacheReset() {
         if (this.cacheResetScheduled) {
@@ -420,6 +445,7 @@ class ScrollManager {
                     limit: this.lenis.limit,
                     viewportHeight: this.viewportHeight,
                     viewportWidth: this.viewportWidth,
+                    activeSectionIndex: this.getCurrentSectionIndex(),
                 };
 
                 this.updateElements();
@@ -591,6 +617,10 @@ class ScrollManager {
         this.velocitySampleY = 0;
 
         this.velocitySampleTime = 0;
+        if (this.scrollStopTimer) {
+            clearTimeout(this.scrollStopTimer);
+            this.scrollStopTimer = null;
+        }
 
         this.clearUncontrolledAlignment();
     }
@@ -720,6 +750,19 @@ class ScrollManager {
 
         return activeIndex;
     }
+
+    getActiveSection = () => {
+        this.syncStructure();
+
+        const index = this.getCurrentSectionIndex();
+        const section = this.sections[index];
+
+        return {
+            index,
+            element: section ?? null,
+            controlled: section ? isControlled(section) : false,
+        };
+    };
 
     private getCurrentSectionIndex() {
         const viewportCenter = this.viewportHeight / 2;
@@ -929,7 +972,7 @@ class ScrollManager {
     }
 
     scrollToSection(index: number) {
-        if (!this.lenis || this.isControlAnimating) {
+        if (!this.lenis) {
             return;
         }
 
@@ -943,7 +986,7 @@ class ScrollManager {
 
         this.clearUncontrolledAlignment();
 
-        this.snapTo(section, this.SNAP_DURATION);
+        this.snapTo(section, this.SNAP_DURATION, undefined, true);
     }
 
     private sampleVelocity(y: number) {
@@ -1058,18 +1101,26 @@ class ScrollManager {
         target: ScrollTarget,
         duration: number,
         onComplete?: () => void,
+        interrupt = false,
     ) {
-        if (!this.lenis || this.isControlAnimating) {
+        if (!this.lenis || (this.isControlAnimating && !interrupt)) {
             return;
         }
+
+        if (interrupt) {
+            this.controlAnimationId += 1;
+            this.isControlAnimating = false;
+            this.wheelConsumed = false;
+            this.touchConsumed = false;
+        }
+
+        const animationId = ++this.controlAnimationId;
         const touchSessionId = this.touchSessionId;
 
         const plan = this.planMove(target, duration);
 
         this.isControlAnimating = true;
-
         this.wheelConsumed = true;
-
         this.touchConsumed = true;
 
         this.lenis.scrollTo(target, {
@@ -1078,10 +1129,18 @@ class ScrollManager {
             lock: true,
             force: true,
             onComplete: () => {
+                if (animationId !== this.controlAnimationId) {
+                    return;
+                }
+
                 onComplete?.();
 
                 requestAnimationFrame(() => {
                     requestAnimationFrame(() => {
+                        if (animationId !== this.controlAnimationId) {
+                            return;
+                        }
+
                         this.isControlAnimating = false;
 
                         if (this.touchSessionId === touchSessionId) {
@@ -1089,7 +1148,9 @@ class ScrollManager {
                         }
 
                         window.setTimeout(() => {
-                            this.wheelConsumed = false;
+                            if (animationId === this.controlAnimationId) {
+                                this.wheelConsumed = false;
+                            }
                         }, 80);
                     });
                 });
@@ -1421,6 +1482,7 @@ class ScrollManager {
             limit: event.limit,
             viewportHeight: this.viewportHeight,
             viewportWidth: this.viewportWidth,
+            activeSectionIndex: this.scrollState.activeSectionIndex,
         };
 
         this.updateElements();
@@ -1432,6 +1494,15 @@ class ScrollManager {
         if (deviceManager.isDesktop) {
             this.snapToNearControlSection(direction);
         }
+
+        if (this.scrollStopTimer) {
+            clearTimeout(this.scrollStopTimer);
+        }
+
+        this.scrollStopTimer = setTimeout(
+            this.updateActiveSectionAfterScroll,
+            this.SCROLL_STOP_DELAY,
+        );
     };
 
     private updateElements() {
@@ -1716,14 +1787,16 @@ class ScrollManager {
             return;
         }
 
+        this.syncStructure();
+
         this.scrollState = {
             ...this.scrollState,
             viewportHeight: this.viewportHeight,
             viewportWidth: this.viewportWidth,
             limit: this.lenis.limit,
+            activeSectionIndex: this.getCurrentSectionIndex(),
         };
 
-        this.syncStructure();
         this.updateElements();
         this.updateBlockStates();
         this.emit();
