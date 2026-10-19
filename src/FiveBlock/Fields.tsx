@@ -207,6 +207,7 @@ export const Fields = () => {
         : "shadow-[0_0_1px_1px] shadow-curr/30 bg-curr/3";
 
     const text = isMobile ? "text-2xl!" : "text-3xl!";
+    const ts = isMobile ? "text-[8px]!" : "text-[10px]!";
 
     return (
         <FormProvider {...methods}>
@@ -444,7 +445,7 @@ export const Fields = () => {
                                                     duration: 0.3,
                                                     ease: "easeOut",
                                                 }}
-                                                className={`whitespace-nowrap text-[10px]! uppercase tracking-wider ${
+                                                className={`whitespace-nowrap ${ts} uppercase tracking-wider ${
                                                     stepState === "completed"
                                                         ? "text-curr"
                                                         : stepState ===

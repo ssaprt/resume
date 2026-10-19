@@ -34,7 +34,7 @@ export const Title = () => {
 
     const opacity = useTransform(leaveProgress, [0, 1], [1, isMobile ? 1 : 0]);
 
-    const text = isMobile ? "text-[1.8em]!" : "text-[32px]!";
+    const text = isMobile ? "text-[1.8em]!" : "text-[24px]! w-2/3";
     const width = isMobile ? "w-full" : "w-2/3";
     const mb = isMobile ? "mb-6 col-center-1" : "mb-0 col-center-4";
 

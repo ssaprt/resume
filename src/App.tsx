@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import ControlScrollSection from "./components/Sections/ControlScrollSection";
 import { UnControlScrollSection } from "./components/Sections/UnControlScrollSection";
@@ -12,9 +12,10 @@ import { ForthBlock } from "./ForthBlock/ForthBlock";
 import { GlitchTransition } from "./GlitchTransition";
 import { Loader } from "./Loader/Loader";
 import { Menu } from "./Menu/Menu";
-import { TopRight } from "./Menu/TopRight/TopRight";
+import LiquidGlassDock from "./Menu/TopRight/LiquidGlassDock";
 import { scrollManager } from "./scroll/ScrollManager";
 import { useDevice } from "./scroll/useDevice";
+import { useScroll } from "./scroll/useScroll";
 import { SecondBlock } from "./SecondBlock/SecondBlock";
 import { useAssetReady } from "./shared/AssetLoader/useAssetReady";
 import { ThridBlock } from "./ThridBlock/ThridBlock";
@@ -23,6 +24,8 @@ function App() {
     const isAssetReady = useAssetReady();
     const { isDesktop } = useDevice();
     const p = isDesktop ? "p-0" : "pl-0";
+    const sceneRef = useRef<HTMLDivElement>(null);
+    const { y } = useScroll();
 
     const [modelsPreloaded, setModelsPreloaded] = useState(false);
 
@@ -59,7 +62,7 @@ function App() {
             >
                 <div id="scroll-container">
                     {!isDesktop && <div className="mobile-bg" />}
-                    <div id="scroll-content">
+                    <div id="scroll-content" ref={sceneRef}>
                         {modelsPreloaded && (
                             <main className={`relative w-full ${p}`}>
                                 <ControlScrollSection id="1">
@@ -116,8 +119,8 @@ function App() {
                 />
             )}
 
-            <Menu />
-            <TopRight
+            {isDesktop && <Menu />}
+            {/* <TopRight
                 viewLinks={[
                     {
                         label: "RUS",
@@ -152,7 +155,13 @@ function App() {
                         download: true,
                     },
                 ]}
-            />
+            /> */}
+
+            <LiquidGlassDock sceneRef={sceneRef} repaintKey={y}>
+                <div className="flex h-full w-full items-center justify-center gap-4">
+                    {/* Кнопки, иконки и другие элементы панели */}
+                </div>
+            </LiquidGlassDock>
 
             <motion.div
                 className="pointer-events-none fixed inset-0 z-[9999]"

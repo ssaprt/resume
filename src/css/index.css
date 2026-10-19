@@ -346,3 +346,34 @@ span {
     background-size: 10px 10px;
     background-position: 0 0;
 }
+
+.bottom-liquid-glass-anchor {
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    right: 0;
+    bottom: calc(16px + env(safe-area-inset-bottom));
+
+    display: flex;
+    justify-content: center;
+
+    box-sizing: border-box;
+    padding-inline: 12px;
+    pointer-events: none;
+}
+
+.bottom-liquid-glass {
+    width: max-content;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+    pointer-events: auto;
+}
+
+.bottom-liquid-glass__content {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    min-width: 0;
+}
