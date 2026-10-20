@@ -8,13 +8,14 @@ export const CV = () => {
     const { isMobile } = useDevice();
     const bg = isMobile ? "bg-alter-fg" : "bg-curr";
     const className = isMobile
-        ? "transform scale-y-200 uppercase tracking-[0.4px] text-alter-fg mt-4"
-        : "text-center lg:text-3xl! font-rob! pb-1";
+        ? "transform scale-y-160 uppercase tracking-[0.4px] text-alter-fg mt-1"
+        : "text-center text-2xl! font-rob! pb-0";
+    const mb = isMobile ? "mb-1 col-center-1" : "mb-auto row-center-3";
 
     return (
         <div
             ref={ref}
-            className="h-full min-w-0 w-full col-center-1 lg:row-center-3 text-curr! justify-between mb-4 lg:mb-auto"
+            className={`h-full min-w-0 w-full text-curr! justify-between ${mb}`}
         >
             <div
                 className="

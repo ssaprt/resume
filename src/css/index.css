@@ -20,7 +20,7 @@
 
     --background: rgb(0, 0, 0);
     --alter-foreground: #c47f15ff;
-    --curr: #64748b;
+    --curr: rgba(100, 116, 139, 1);
 
     --react: #61dbfb;
     --next: #ffffff;

@@ -165,10 +165,6 @@ class ScrollManager {
 
     private blocksRefreshed = false;
 
-    private scrollStopTimer: ReturnType<typeof setTimeout> | null = null;
-
-    private readonly SCROLL_STOP_DELAY = 150;
-
     private isControlAnimating = false;
 
     private wheelConsumed = false;
@@ -264,25 +260,6 @@ class ScrollManager {
 
         return rect;
     }
-
-    private updateActiveSectionAfterScroll = () => {
-        this.scrollStopTimer = null;
-
-        this.syncStructure();
-
-        const activeSectionIndex = this.getCurrentSectionIndex();
-
-        if (activeSectionIndex === this.scrollState.activeSectionIndex) {
-            return;
-        }
-
-        this.scrollState = {
-            ...this.scrollState,
-            activeSectionIndex,
-        };
-
-        this.emit();
-    };
 
     private scheduleCacheReset() {
         if (this.cacheResetScheduled) {
@@ -445,7 +422,7 @@ class ScrollManager {
                     limit: this.lenis.limit,
                     viewportHeight: this.viewportHeight,
                     viewportWidth: this.viewportWidth,
-                    activeSectionIndex: this.getCurrentSectionIndex(),
+                    activeSectionIndex: this.getMostVisibleSectionIndex(),
                 };
 
                 this.updateElements();
@@ -617,10 +594,6 @@ class ScrollManager {
         this.velocitySampleY = 0;
 
         this.velocitySampleTime = 0;
-        if (this.scrollStopTimer) {
-            clearTimeout(this.scrollStopTimer);
-            this.scrollStopTimer = null;
-        }
 
         this.clearUncontrolledAlignment();
     }
@@ -1160,6 +1133,41 @@ class ScrollManager {
         this.invalidateCache();
     }
 
+    private getMostVisibleSectionIndex() {
+        if (!this.sections.length) {
+            return 0;
+        }
+
+        const viewportHeight = this.viewportHeight;
+
+        let activeIndex = Math.min(
+            this.scrollState.activeSectionIndex,
+            this.sections.length - 1,
+        );
+
+        const getVisibleHeight = (section: HTMLElement) => {
+            const rect = this.getRect(section);
+
+            return Math.max(
+                0,
+                Math.min(rect.bottom, viewportHeight) - Math.max(rect.top, 0),
+            );
+        };
+
+        let maxVisibleHeight = getVisibleHeight(this.sections[activeIndex]);
+
+        for (let index = 0; index < this.sections.length; index++) {
+            const visibleHeight = getVisibleHeight(this.sections[index]);
+
+            if (visibleHeight > maxVisibleHeight) {
+                maxVisibleHeight = visibleHeight;
+                activeIndex = index;
+            }
+        }
+
+        return activeIndex;
+    }
+
     private snapToNearControlSection(direction: -1 | 0 | 1) {
         if (
             !direction ||
@@ -1482,7 +1490,7 @@ class ScrollManager {
             limit: event.limit,
             viewportHeight: this.viewportHeight,
             viewportWidth: this.viewportWidth,
-            activeSectionIndex: this.scrollState.activeSectionIndex,
+            activeSectionIndex: this.getMostVisibleSectionIndex(),
         };
 
         this.updateElements();
@@ -1494,15 +1502,6 @@ class ScrollManager {
         if (deviceManager.isDesktop) {
             this.snapToNearControlSection(direction);
         }
-
-        if (this.scrollStopTimer) {
-            clearTimeout(this.scrollStopTimer);
-        }
-
-        this.scrollStopTimer = setTimeout(
-            this.updateActiveSectionAfterScroll,
-            this.SCROLL_STOP_DELAY,
-        );
     };
 
     private updateElements() {
@@ -1794,7 +1793,7 @@ class ScrollManager {
             viewportHeight: this.viewportHeight,
             viewportWidth: this.viewportWidth,
             limit: this.lenis.limit,
-            activeSectionIndex: this.getCurrentSectionIndex(),
+            activeSectionIndex: this.getMostVisibleSectionIndex(),
         };
 
         this.updateElements();

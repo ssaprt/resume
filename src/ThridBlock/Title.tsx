@@ -6,7 +6,7 @@ import {
 } from "framer-motion";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { SplitText } from "../components/text/ScatterText";
+import SplitText from "../components/text/ScatterText";
 import { useDevice } from "../scroll/useDevice";
 import {
     useScrollBlockMotion,
@@ -34,9 +34,7 @@ export const Title = () => {
 
     const opacity = useTransform(leaveProgress, [0, 1], [1, isMobile ? 1 : 0]);
 
-    const text = isMobile ? "text-[1.8em]!" : "text-[24px]! w-2/3";
-    const width = isMobile ? "w-full" : "w-2/3";
-    const mb = isMobile ? "mb-6 col-center-1" : "mb-0 col-center-4";
+    const mb = isMobile ? "mb-6 col-center-1" : "mb-3 col-center-4";
 
     const handleSelect = (index: number) => {
         setActive(index);
@@ -51,13 +49,13 @@ export const Title = () => {
             <GoPrev />
 
             {isMobile ? (
-                <h1 className="relative shrink-0 text-nowrap text-curr/80 text-[32px]! font-ops!">
+                <h1 className="relative shrink-0 text-nowrap text-curr/80 text-[32px]! font-ops! mb-6">
                     Tech Stack
                 </h1>
             ) : (
                 <SplitText
                     text="Tech Stack"
-                    className="relative shrink-0 text-nowrap text-curr/80 text-[32px]! font-ops!"
+                    className="relative shrink-0 text-nowrap text-curr/80 text-[32px]! font-ops! mb-1"
                     left={{
                         x: -20,
                         y: 0,
@@ -79,40 +77,6 @@ export const Title = () => {
                 />
             )}
 
-            <div className={`${mb} ${width}`}>
-                {isMobile ? (
-                    <h1
-                        className={`text-center font-rob! text-curr! ${text} opacity-80`}
-                    >
-                        An interactive tour of my core tech stack and the tools
-                        I use in my projects
-                    </h1>
-                ) : (
-                    <SplitText
-                        text="An interactive tour of my core tech stack and the tools I use in my projects"
-                        className={`text-center font-outfit! text-curr! ${text} opacity-80`}
-                        left={{
-                            x: -20,
-                            y: 0,
-                            rotate: 0,
-                            scale: 0,
-                            opacity: 0,
-                        }}
-                        right={{
-                            x: 20,
-                            y: 0,
-                            rotate: 0,
-                            scale: 0,
-                            opacity: 0,
-                        }}
-                        stagger={0.15}
-                        as="h1"
-                        enterOnlyFromTop
-                        scroll={{ leaveProgress, leaveDirection }}
-                    />
-                )}
-            </div>
-
             {isMobile ? (
                 <MobileTechSelect
                     types={types}
@@ -120,7 +84,12 @@ export const Title = () => {
                     onSelect={handleSelect}
                 />
             ) : (
-                <div className="relative isolate row-center-2 justify-center flex-wrap rounded-[12px] p-3">
+                <div
+                    className="relative isolate row-center-2 justify-center flex-wrap w-auto h-auto rounded-full backdrop-blur-sm
+                shadow-[inset_0_0_16px_0px] border-1
+                border-curr/30 shadow-curr/30
+                row-center-1 p-1"
+                >
                     {types.map((type, index) => (
                         <Button
                             key={type}
@@ -296,17 +265,25 @@ const MobileTechSelect = ({
                     onClick={openMenu}
                     className="
                         flex w-full items-center justify-between gap-3
-                        rounded-xl border border-curr/50
-                        bg-app px-4 py-3 text-left text-curr
+                        rounded-xl border border-curr/30
+                        bg-app/70 px-4 py-3 text-left text-curr
+                        shadow-[inset_0_0_16px_0px] shadow-curr/10
+                        backdrop-blur-xl
                         transition-colors duration-200
-                        active:border-curr
+                        active:border-curr/60
                         focus-visible:outline
                         focus-visible:outline-1
                         focus-visible:outline-curr
                     "
                 >
                     <span className="flex min-w-0 items-center gap-3">
-                        <span className="grid size-8 shrink-0 place-items-center rounded-lg border border-curr/40 font-mono text-xs text-curr">
+                        <span
+                            className="
+                            grid size-8 shrink-0 place-items-center
+                            rounded-lg border border-curr/30
+                            font-mono text-xs text-curr/80
+                        "
+                        >
                             {String(active + 1).padStart(2, "0")}
                         </span>
 
@@ -319,7 +296,7 @@ const MobileTechSelect = ({
                         aria-hidden="true"
                         viewBox="0 0 24 24"
                         fill="none"
-                        className="size-5 shrink-0 text-curr"
+                        className="size-5 shrink-0 text-curr/80"
                         animate={{ rotate: isOpen ? 180 : 0 }}
                         transition={{ duration: 0.2, ease: "easeInOut" }}
                     >
@@ -353,7 +330,14 @@ const MobileTechSelect = ({
                                     scale: 0.99,
                                 }}
                                 transition={{ duration: 0.16, ease: "easeOut" }}
-                                className="fixed overflow-hidden rounded-xl border border-curr/40 bg-app shadow-2xl"
+                                className="
+                                    fixed overflow-hidden rounded-xl
+                                    border border-curr/30
+                                    bg-app/85
+                                    shadow-[inset_0_0_16px_0px]
+                                    shadow-curr/20
+                                    backdrop-blur-2xl
+                                "
                                 style={{
                                     position: "fixed",
                                     left: initialPosition.left,
@@ -391,25 +375,51 @@ const MobileTechSelect = ({
                                                     handleSelect(index)
                                                 }
                                                 className={`
-                                                    flex w-full items-center gap-3
+                                                    relative flex w-full
+                                                    items-center gap-3
                                                     rounded-lg px-3 py-3
                                                     text-left
                                                     transition-colors duration-150
                                                     ${
                                                         isSelected
-                                                            ? "bg-curr text-app!"
-                                                            : "text-curr hover:bg-white/5 hover:text-fg!"
+                                                            ? "text-curr"
+                                                            : "text-curr/70 hover:bg-curr/5 hover:text-curr"
                                                     }
                                                 `}
                                             >
+                                                {isSelected && (
+                                                    <motion.span
+                                                        layoutId="tech-stack-mobile-active-track"
+                                                        aria-hidden="true"
+                                                        transition={{
+                                                            type: "spring",
+                                                            stiffness: 360,
+                                                            damping: 25,
+                                                            mass: 0.8,
+                                                        }}
+                                                        className="
+                                                            pointer-events-none
+                                                            absolute inset-0 z-0
+                                                            rounded-lg
+                                                            border border-curr/30
+                                                            bg-curr/5
+                                                            shadow-[inset_0_0_16px_0px]
+                                                            shadow-curr/20
+                                                        "
+                                                    />
+                                                )}
+
                                                 <span
                                                     className={`
-                                                        grid size-7 shrink-0 place-items-center
-                                                        rounded-md border font-mono text-[10px]
+                                                        relative z-10
+                                                        grid size-7 shrink-0
+                                                        place-items-center
+                                                        rounded-md border
+                                                        font-mono text-[10px]
                                                         ${
                                                             isSelected
-                                                                ? "border-app/30"
-                                                                : "border-curr/30"
+                                                                ? "border-curr/40 text-curr"
+                                                                : "border-curr/20 text-curr/60"
                                                         }
                                                     `}
                                                 >
@@ -419,7 +429,13 @@ const MobileTechSelect = ({
                                                     )}
                                                 </span>
 
-                                                <span className="min-w-0 flex-1 truncate font-ops text-sm tracking-[0.14em]">
+                                                <span
+                                                    className="
+                                                    relative z-10 min-w-0 flex-1
+                                                    truncate font-ops text-sm
+                                                    tracking-[0.14em]
+                                                "
+                                                >
                                                     {type}
                                                 </span>
 
@@ -428,7 +444,7 @@ const MobileTechSelect = ({
                                                         aria-hidden="true"
                                                         viewBox="0 0 24 24"
                                                         fill="none"
-                                                        className="size-4 shrink-0"
+                                                        className="relative z-10 size-4 shrink-0"
                                                     >
                                                         <path
                                                             d="m5 12 4 4L19 6"
@@ -477,25 +493,41 @@ const Button = ({ type, i, active, onSelect }: ButtonProps) => {
             style={{ filter }}
             data-cursor="button"
             data-color="curr"
+            data-shadow="0 0 40px 10px"
             onClick={() => onSelect(i)}
             className={`
                 relative
                 whitespace-nowrap
-                text-[10px]
-                font-ops
-                tracking-[0.2em]
-                py-1 pt-[6px] px-2
-                outline-1
-                outline-fg/20
-                outline-offset-2
-                ${
-                    isActive
-                        ? "bg-curr text-app!"
-                        : "text-curr hover:text-curr! hover:outline-curr"
-                }
+            [&_span]:text-[12px]! px-2 py-1
+                rounded-full
+                hover:text-curr/80
+                text-curr
+                col-center-0
             `}
         >
-            {type}
+            {isActive && (
+                <motion.span
+                    layoutId="tech-stack-active-track"
+                    aria-hidden="true"
+                    transition={{
+                        type: "spring",
+                        stiffness: 360,
+                        damping: 25,
+                        mass: 0.8,
+                    }}
+                    className="
+                        pointer-events-none
+                        absolute inset-0 z-0
+                        rounded-full
+                        backdrop-blur-sm
+                        shadow-[inset_0_0_16px_0px]
+                        border-1 border-curr/30
+                        shadow-curr/30
+                    "
+                />
+            )}
+
+            <span className="relative z-10">{type}</span>
         </motion.button>
     );
 };

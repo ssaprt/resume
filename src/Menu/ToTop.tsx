@@ -2,18 +2,22 @@ import { IconArrowUpToArc } from "@tabler/icons-react";
 import { motion } from "framer-motion";
 import { useState } from "react";
 import { scrollManager } from "../scroll/ScrollManager";
+import { useDevice } from "../scroll/useDevice";
 import { useScrollBlocks } from "../scroll/useScroll";
 
 export const ToTop = () => {
     const blocks = useScrollBlocks();
     const [hovered, setHovered] = useState(false);
     const visible = blocks[0]?.visible ?? true;
+    const { isMobile } = useDevice();
+
+    const style = isMobile ? "fixed bottom-13 left-2" : "";
 
     return (
         <motion.div
             data-cursor="button"
             data-color="curr"
-            className="w-10 h-10 rounded-full cursor-pointer flex items-center justify-center"
+            className={`w-10 h-10 rounded-full cursor-pointer flex items-center justify-center ${style}`}
             onMouseEnter={() => setHovered(true)}
             onMouseLeave={() => setHovered(false)}
             onClick={() => scrollManager.scrollToSection(0)}

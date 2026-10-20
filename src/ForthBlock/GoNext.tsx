@@ -16,7 +16,8 @@ export const GoNext = () => {
             ref={(e) => ref(e?.parentNode as HTMLElement)}
             className="
                 relative
-                mt-10 mx-auto
+                mt-4 mx-auto
+                mb-10
                 w-40
                 h-10
                 

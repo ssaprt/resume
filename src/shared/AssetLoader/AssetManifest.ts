@@ -22,7 +22,7 @@ export const MODEL_ASSETS = [
     { name: "typescript", path: "/typescript.glb" },
 ] as const satisfies readonly ModelAsset[];
 
-export const MODEL_CHUNK_SIZE = 4;
+const MODEL_CHUNK_SIZE = 4;
 
 export const MODEL_ASSET_CHUNKS = Array.from(
     {

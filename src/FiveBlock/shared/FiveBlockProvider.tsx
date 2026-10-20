@@ -42,7 +42,7 @@ export const FiveBlockProvider = ({
             <motion.div
                 ref={(e) => ref(e?.parentNode as HTMLElement)}
                 style={{ opacity }}
-                className={`w-full h-full ${p} `}
+                className={`w-full h-full ${p} pb-20!`}
             >
                 {children}
             </motion.div>

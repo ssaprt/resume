@@ -34,7 +34,7 @@ export const CarouselProjects = ({ slides, options }: Props) => {
     const { isMobile } = useDevice();
     const { setColorName, setActiveIndex } = useThridBlockContext();
 
-    const copyCount = isMobile || slides.length >= 5 ? 1 : 3;
+    const copyCount = isMobile ? 3 : slides.length >= 5 ? 1 : 3;
     const middleCopy = copyCount === 1 ? 0 : 1;
 
     const logicalStartIndex =

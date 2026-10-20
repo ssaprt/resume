@@ -14,6 +14,7 @@ import { Loader } from "./Loader/Loader";
 import { Menu } from "./Menu/Menu";
 
 import { BottomMenu } from "./BottomMenu/BottomMenu";
+import { ToTop } from "./Menu/ToTop";
 import { scrollManager } from "./scroll/ScrollManager";
 import { useDevice } from "./scroll/useDevice";
 import { SecondBlock } from "./SecondBlock/SecondBlock";
@@ -118,42 +119,7 @@ function App() {
             )}
 
             {isDesktop && <Menu />}
-            {/* <TopRight
-                viewLinks={[
-                    {
-                        label: "RUS",
-                        href: "/cv/resume-rus.pdf",
-                        target: "_blank",
-                    },
-                    {
-                        label: "ENG",
-                        href: "/cv/resume-eng.pdf",
-                        target: "_blank",
-                    },
-                    {
-                        label: "UKR",
-                        href: "/cv/resume-ukr.pdf",
-                        target: "_blank",
-                    },
-                ]}
-                downloadLinks={[
-                    {
-                        label: "RUS",
-                        href: "/cv/resume-rus.pdf",
-                        download: true,
-                    },
-                    {
-                        label: "ENG",
-                        href: "/cv/resume-eng.pdf",
-                        download: true,
-                    },
-                    {
-                        label: "UKR",
-                        href: "/cv/resume-ukr.pdf",
-                        download: true,
-                    },
-                ]}
-            /> */}
+            {!isDesktop && <ToTop />}
 
             <BottomMenu />
 

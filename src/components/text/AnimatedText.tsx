@@ -136,5 +136,3 @@ export const AnimatedText = ({
         children,
     );
 };
-
-export default AnimatedText;

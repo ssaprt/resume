@@ -125,7 +125,7 @@ type SplitTextProps = {
     };
 };
 
-export const SplitText = ({
+const SplitText = ({
     text,
     as = "h1",
     className,

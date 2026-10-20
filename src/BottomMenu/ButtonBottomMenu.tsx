@@ -30,22 +30,19 @@ export const ButtonBottomMenu = ({ textButton, indexBlock }: Props) => {
         <div
             data-cursor="button"
             data-color="curr"
+            data-shadow="0 0 50px 20px"
             ref={ref}
-            onClick={(e) => {
-                setElement(e.currentTarget);
-                scrollManager.scrollToSection(indexBlock);
-            }}
+            onClick={() => scrollManager.scrollToSection(indexBlock)}
             className={`
                 col-center-0
-                gap-[1px]
+               
                 shrink-0
                 ${pointer}
                 select-none
+                [&_span]:hover:text-curr
                 `}
         >
-            <span
-                className={`${span} text-curr/50 hover:text-curr pointer-events-none`}
-            >
+            <span className={`${span} text-curr/50 pointer-events-none`}>
                 {textButton}
             </span>
         </div>

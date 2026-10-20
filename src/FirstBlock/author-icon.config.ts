@@ -247,11 +247,3 @@ export type AuthorIconShowAnimation =
 
 export type AuthorIconHideAnimation =
     keyof typeof authorIconAnimationConfig.hide;
-
-export const authorIconShowAnimations = Object.keys(
-    authorIconAnimationConfig.show,
-) as AuthorIconShowAnimation[];
-
-export const authorIconHideAnimations = Object.keys(
-    authorIconAnimationConfig.hide,
-) as AuthorIconHideAnimation[];
