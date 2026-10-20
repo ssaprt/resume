@@ -60,7 +60,7 @@ function App() {
                 returnSpeed={1}
             >
                 <div id="scroll-container">
-                    {!isDesktop && <div className="mobile-bg" />}
+                    {/* {!isDesktop && <div className="mobile-bg" />} */}
                     <div id="scroll-content">
                         {modelsPreloaded && (
                             <main className={`relative w-full ${p}`}>
@@ -101,22 +101,20 @@ function App() {
 
             <GlitchTransition active={isAssetReady} />
 
-            {isDesktop && (
-                <DotGrid
-                    gridSize={10}
-                    cursorRadius={50}
-                    falloff={22}
-                    baseRadius={1}
-                    maxRadius={2}
-                    baseOpacity={0.12}
-                    maxOpacity={0.35}
-                    distortion={28}
-                    smoothness={1}
-                    jellySmoothness={0.11}
-                    cursorDotSize={8}
-                    circleOpacity={1}
-                />
-            )}
+            <DotGrid
+                gridSize={10}
+                cursorRadius={50}
+                falloff={22}
+                baseRadius={1}
+                maxRadius={2}
+                baseOpacity={0.12}
+                maxOpacity={0.35}
+                distortion={28}
+                smoothness={1}
+                jellySmoothness={0.11}
+                cursorDotSize={8}
+                circleOpacity={1}
+            />
 
             {isDesktop && <Menu />}
             {!isDesktop && <ToTop />}

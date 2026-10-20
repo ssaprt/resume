@@ -1,6 +1,7 @@
 import type { CSSProperties, ReactNode } from "react";
 import { useEffect, useRef, useState } from "react";
 import { DynamicSvgIcon } from "./components/Icons/DynamicSvgIcon";
+import { useDevice } from "./scroll/useDevice";
 import { useAssetReady } from "./shared/AssetLoader/useAssetReady";
 
 type Props = {
@@ -243,6 +244,8 @@ export default function DotGrid({
     tentacleWaveLength = 90,
     className,
 }: Props) {
+    const { isMobile } = useDevice();
+
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const cursorRef = useRef<HTMLDivElement>(null);
     const circleRef = useRef<HTMLDivElement>(null);
@@ -297,6 +300,27 @@ export default function DotGrid({
 
         if (!ctx) {
             return;
+        }
+
+        const octopusSize = isMobile ? 0.75 : 1;
+
+        const pointBaseOpacity = isMobile
+            ? Math.max(baseOpacity, 0.45)
+            : baseOpacity;
+
+        const pointMaxOpacity = isMobile
+            ? Math.max(maxOpacity, 0.75)
+            : maxOpacity;
+
+        if (isMobile) {
+            mouseRef.current.x = -1000;
+            mouseRef.current.y = -1000;
+
+            targetMouseRef.current.x = -1000;
+            targetMouseRef.current.y = -1000;
+
+            clickRef.current = 0;
+            clickTargetRef.current = 0;
         }
 
         let cols = 0;
@@ -356,7 +380,9 @@ export default function DotGrid({
                 const spine: { x: number; y: number }[] = [];
 
                 for (let i = 0; i < tentacleSegments; i++) {
-                    const distance = TENTACLE_ROOT_OFFSET + i * tentacleSpacing;
+                    const distance =
+                        (TENTACLE_ROOT_OFFSET + i * tentacleSpacing) *
+                        octopusSize;
 
                     spine.push({
                         x: head.x + Math.cos(restAngle) * distance,
@@ -535,29 +561,37 @@ export default function DotGrid({
                 const restX = Math.cos(restAngle);
                 const restY = Math.sin(restAngle);
 
-                spine[0].x = head.x + restX * TENTACLE_ROOT_OFFSET;
-
-                spine[0].y = head.y + restY * TENTACLE_ROOT_OFFSET;
+                spine[0].x =
+                    head.x + restX * TENTACLE_ROOT_OFFSET * octopusSize;
+                spine[0].y =
+                    head.y + restY * TENTACLE_ROOT_OFFSET * octopusSize;
 
                 for (let i = 1; i < spine.length; i++) {
                     const previous = spine[i - 1];
                     const segment = spine[i];
 
                     segment.x +=
-                        (previous.x + restX * tentacleSpacing - segment.x) *
+                        (previous.x +
+                            restX * tentacleSpacing * octopusSize -
+                            segment.x) *
                         TENTACLE_STIFFNESS;
 
                     segment.y +=
-                        (previous.y + restY * tentacleSpacing - segment.y) *
+                        (previous.y +
+                            restY * tentacleSpacing * octopusSize -
+                            segment.y) *
                         TENTACLE_STIFFNESS;
 
                     const dx = segment.x - previous.x;
                     const dy = segment.y - previous.y;
                     const length = Math.hypot(dx, dy) || 1;
 
-                    segment.x = previous.x + (dx / length) * tentacleSpacing;
-
-                    segment.y = previous.y + (dy / length) * tentacleSpacing;
+                    segment.x =
+                        previous.x +
+                        (dx / length) * tentacleSpacing * octopusSize;
+                    segment.y =
+                        previous.y +
+                        (dy / length) * tentacleSpacing * octopusSize;
                 }
             }
         };
@@ -571,8 +605,8 @@ export default function DotGrid({
             for (const mantle of MANTLE_BLOBS) {
                 const blob = blobs[blobIndex++];
 
-                blob.x = head.x + forwardX * mantle.offset;
-                blob.y = head.y + forwardY * mantle.offset;
+                blob.x = head.x + forwardX * mantle.offset * octopusSize;
+                blob.y = head.y + forwardY * mantle.offset * octopusSize;
                 blob.scale = mantle.scale * mantleScale;
             }
 
@@ -596,10 +630,11 @@ export default function DotGrid({
 
                     const offset =
                         tentacleWaveAmplitude *
+                        octopusSize *
                         ramp *
                         Math.sin(
                             wavePhase -
-                                i * tentacleSpacing * waveNumber +
+                                i * tentacleSpacing * octopusSize * waveNumber +
                                 k * TENTACLE_PHASE_STEP,
                         );
 
@@ -623,14 +658,17 @@ export default function DotGrid({
             const points = pointsRef.current;
 
             for (const blob of blobs) {
-                const blobRadius = cursorRadius * blob.scale;
+                const blobRadius = cursorRadius * blob.scale * octopusSize;
 
                 if (blobRadius <= 0) {
                     continue;
                 }
 
                 const blobRadiusSquared = blobRadius * blobRadius;
-                const blobFalloff = Math.max(1, falloff * blob.scale);
+                const blobFalloff = Math.max(
+                    1,
+                    falloff * blob.scale * octopusSize,
+                );
 
                 const twoFalloffSquared = 2 * blobFalloff * blobFalloff;
 
@@ -772,6 +810,7 @@ export default function DotGrid({
                 const dy = point.y - centerY;
 
                 const distance = Math.hypot(dx, dy);
+
                 const normalizedDistance = clamp(
                     distance / safeMaxDistance,
                     0,
@@ -865,6 +904,10 @@ export default function DotGrid({
         };
 
         const updateCursorMode = (element: Element | null) => {
+            if (isMobile) {
+                return;
+            }
+
             const cursorElement =
                 element?.closest<HTMLElement>("[data-cursor]");
 
@@ -897,6 +940,10 @@ export default function DotGrid({
         };
 
         const handlePointerMove = (event: PointerEvent) => {
+            if (isMobile) {
+                return;
+            }
+
             targetMouseRef.current.x = event.clientX;
             targetMouseRef.current.y = event.clientY;
 
@@ -909,6 +956,10 @@ export default function DotGrid({
         };
 
         const handlePointerDown = (event: PointerEvent) => {
+            if (isMobile) {
+                return;
+            }
+
             clickTargetRef.current = 1;
 
             const element = document.elementFromPoint(
@@ -920,10 +971,18 @@ export default function DotGrid({
         };
 
         const handlePointerUp = () => {
+            if (isMobile) {
+                return;
+            }
+
             clickTargetRef.current = 0;
         };
 
         const handlePointerLeave = () => {
+            if (isMobile) {
+                return;
+            }
+
             targetMouseRef.current.x = -1000;
             targetMouseRef.current.y = -1000;
 
@@ -960,12 +1019,15 @@ export default function DotGrid({
             const cursorDX = mouse.x - previousMouseX;
             const cursorDY = mouse.y - previousMouseY;
 
-            const cursorSpeed = Math.hypot(cursorDX, cursorDY);
+            const cursorSpeed = isMobile ? 0 : Math.hypot(cursorDX, cursorDY);
+
+            const cursorX = isMobile ? -10000 : mouse.x;
+            const cursorY = isMobile ? -10000 : mouse.y;
 
             clickRef.current +=
                 (clickTargetRef.current - clickRef.current) * 0.2;
 
-            const click = clickRef.current;
+            const click = isMobile ? 0 : clickRef.current;
 
             const targetMode =
                 CURSOR_MODES[cursorModeRef.current.target] ??
@@ -1012,31 +1074,37 @@ export default function DotGrid({
                 initOctopus();
                 updateBlobs();
 
-                wasTouchingOctopus = isTouchingOctopus(mouse.x, mouse.y);
+                wasTouchingOctopus = isMobile
+                    ? false
+                    : isTouchingOctopus(mouse.x, mouse.y);
             }
 
             tick++;
 
             if (!explosionActive) {
-                updateOctopus(mouse.x, mouse.y, cursorSpeed);
+                updateOctopus(cursorX, cursorY, cursorSpeed);
                 updateBlobs();
                 accumulateOctopus();
 
-                const touching = isTouchingOctopus(mouse.x, mouse.y);
+                if (!isMobile) {
+                    const touching = isTouchingOctopus(mouse.x, mouse.y);
 
-                if (touching && !wasTouchingOctopus) {
-                    if (Math.random() < OCTOPUS_CATCH_CHANCE) {
-                        explodeOctopus(
-                            timestamp,
-                            cursorDX,
-                            cursorDY,
-                            cursorSpeed,
-                        );
+                    if (touching && !wasTouchingOctopus) {
+                        if (Math.random() < OCTOPUS_CATCH_CHANCE) {
+                            explodeOctopus(
+                                timestamp,
+                                cursorDX,
+                                cursorDY,
+                                cursorSpeed,
+                            );
+                        } else {
+                            wasTouchingOctopus = true;
+                        }
                     } else {
-                        wasTouchingOctopus = true;
+                        wasTouchingOctopus = touching;
                     }
                 } else {
-                    wasTouchingOctopus = touching;
+                    wasTouchingOctopus = false;
                 }
             } else {
                 octopusField.fill(0);
@@ -1044,7 +1112,7 @@ export default function DotGrid({
 
             ctx.clearRect(0, 0, width, height);
 
-            if (cursorRef.current) {
+            if (!isMobile && cursorRef.current) {
                 const scale = animation.scale * (1 - click * 0.5);
 
                 cursorRef.current.style.transform = `translate3d(
@@ -1056,7 +1124,7 @@ export default function DotGrid({
                 cursorRef.current.style.opacity = `${animation.opacity}`;
             }
 
-            if (circleRef.current) {
+            if (!isMobile && circleRef.current) {
                 circleRef.current.style.transform = `translate3d(
                     ${mouse.x - cursorRadius}px,
                     ${mouse.y - cursorRadius}px,
@@ -1085,14 +1153,14 @@ export default function DotGrid({
             for (let index = 0; index < points.length; index++) {
                 const point = points[index];
 
-                const dx = point.x - mouse.x;
-                const dy = point.y - mouse.y;
+                const dx = point.x - cursorX;
+                const dy = point.y - cursorY;
 
                 const distanceSquared = dx * dx + dy * dy;
 
                 let influence = 0;
 
-                if (distanceSquared < radiusSquared) {
+                if (!isMobile && distanceSquared < radiusSquared) {
                     influence = Math.exp(
                         -distanceSquared / (2 * falloffSquared),
                     );
@@ -1114,7 +1182,7 @@ export default function DotGrid({
 
                 let targetY = point.y + directionY * displacement;
 
-                if (click > 0 && distance > 0.001) {
+                if (!isMobile && click > 0 && distance > 0.001) {
                     const clickFalloff = Math.exp(
                         -distanceSquared / (2 * falloffSquared),
                     );
@@ -1125,7 +1193,7 @@ export default function DotGrid({
                     targetY -= directionY * compression;
                 }
 
-                if (animation.distortion > 0 && distance > 0.001) {
+                if (!isMobile && animation.distortion > 0 && distance > 0.001) {
                     const cursorFalloff = Math.exp(
                         -distanceSquared / (2 * falloffSquared),
                     );
@@ -1138,7 +1206,6 @@ export default function DotGrid({
                 }
 
                 const fieldOffset = index * 4;
-
                 const octopusInfluence = octopusField[fieldOffset + 3];
 
                 if (octopusInfluence > 0) {
@@ -1220,7 +1287,8 @@ export default function DotGrid({
                     baseRadius + (maxRadius - baseRadius) * totalInfluence;
 
                 const opacity =
-                    baseOpacity + (maxOpacity - baseOpacity) * totalInfluence;
+                    pointBaseOpacity +
+                    (pointMaxOpacity - pointBaseOpacity) * totalInfluence;
 
                 ctx.beginPath();
 
@@ -1245,21 +1313,26 @@ export default function DotGrid({
         animationRef.current = requestAnimationFrame(render);
 
         window.addEventListener("resize", resize);
-        window.addEventListener("pointermove", handlePointerMove);
-        window.addEventListener("pointerdown", handlePointerDown);
-        window.addEventListener("pointerup", handlePointerUp);
-        window.addEventListener("pointerleave", handlePointerLeave);
+
+        if (!isMobile) {
+            window.addEventListener("pointermove", handlePointerMove);
+            window.addEventListener("pointerdown", handlePointerDown);
+            window.addEventListener("pointerup", handlePointerUp);
+            window.addEventListener("pointerleave", handlePointerLeave);
+        }
 
         return () => {
             cancelAnimationFrame(animationRef.current);
 
             window.removeEventListener("resize", resize);
+
             window.removeEventListener("pointermove", handlePointerMove);
             window.removeEventListener("pointerdown", handlePointerDown);
             window.removeEventListener("pointerup", handlePointerUp);
             window.removeEventListener("pointerleave", handlePointerLeave);
         };
     }, [
+        isMobile,
         gridSize,
         cursorRadius,
         falloff,
@@ -1283,12 +1356,15 @@ export default function DotGrid({
     ]);
 
     useEffect(() => {
-        document.body.classList.toggle("custom-cursor-active", isReady);
+        document.body.classList.toggle(
+            "custom-cursor-active",
+            isReady && !isMobile,
+        );
 
         return () => {
             document.body.classList.remove("custom-cursor-active");
         };
-    }, [isReady]);
+    }, [isReady, isMobile]);
 
     const circleStyle = {
         position: "fixed",
@@ -1350,7 +1426,7 @@ export default function DotGrid({
                 }}
             />
 
-            {isReady && (
+            {isReady && !isMobile && (
                 <>
                     <div
                         ref={circleRef}
