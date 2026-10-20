@@ -7,8 +7,8 @@ import { useScrollTransform } from "../scroll/useScrollTransform";
 export const Bottom = () => {
     const { ref, bottom } = useScrollElement();
     const { isMobile } = useDevice();
-    const h = isMobile ? "h-8" : "h-12";
-    const bot = isMobile ? "bottom-14" : "bottom-12";
+    const h = isMobile ? "h-8" : "h-10";
+    const bot = isMobile ? "bottom-14" : "bottom-15";
     const opacity = useScrollTransform(
         bottom,
         [isMobile ? 0.7 : 1, isMobile ? 0.65 : 0.65],

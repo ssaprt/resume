@@ -43,6 +43,7 @@ export const BottomMenuContent = ({ viewLinks, downloadLinks }: Props) => {
     const [panelTransitionId, setPanelTransitionId] = useState(0);
 
     const links = group === "view" ? viewLinks : downloadLinks;
+
     const b = isMobile
         ? "bottom-1 left-2"
         : "bottom-1 -translate-x-1/2 left-[calc(50%+20px)]";
@@ -266,7 +267,6 @@ export const BottomMenuContent = ({ viewLinks, downloadLinks }: Props) => {
                 border border-fg/10
                 p-1 text-fg
                 border border-curr/30
-                
                 ${
                     isMobile
                         ? "bg-curr/10 shadow-[inset_0_0_50px_0px_rgba(100,116,139,0.3),0_0_1px_1px_rgba(100,116,139,0.7)]"
@@ -462,275 +462,291 @@ export const BottomMenuContent = ({ viewLinks, downloadLinks }: Props) => {
                         <span className="relative block size-4">
                             <motion.span
                                 className="
-                                    absolute left-1/2 top-1/2
+                                    absolute left-1/2
                                     h-px w-8/10
-                                    -translate-x-1/2 -translate-y-1/2
                                     rounded-full bg-current
                                 "
                                 animate={{
+                                    top: navigationOpen ? "7.5px" : "3.5px",
                                     rotate: navigationOpen ? 45 : 0,
-                                    y: navigationOpen ? 0 : -5,
+                                    x: "-50%",
                                 }}
                                 transition={{
                                     duration: 0.2,
                                     ease: "easeInOut",
                                 }}
+                                style={{
+                                    transformOrigin: "center center",
+                                }}
                             />
 
                             <motion.span
                                 className="
-                                    absolute left-1/2 top-1/2
+                                    absolute left-1/2 top-[7.5px]
                                     h-px w-8/10
-                                    -translate-x-1/2 -translate-y-1/2
                                     rounded-full bg-current
                                 "
                                 animate={{
                                     opacity: navigationOpen ? 0 : 1,
                                     scaleX: navigationOpen ? 0 : 1,
+                                    x: "-50%",
                                 }}
-                                transition={{ duration: 0.15 }}
+                                transition={{
+                                    duration: 0.15,
+                                    ease: "easeInOut",
+                                }}
                             />
 
                             <motion.span
                                 className="
-                                    absolute left-1/2 top-1/2
+                                    absolute left-1/2
                                     h-px w-8/10
-                                    -translate-x-1/2 -translate-y-1/2
                                     rounded-full bg-current
                                 "
                                 animate={{
+                                    top: navigationOpen ? "7.5px" : "11.5px",
                                     rotate: navigationOpen ? -45 : 0,
-                                    y: navigationOpen ? 0 : 5,
+                                    x: "-50%",
                                 }}
                                 transition={{
                                     duration: 0.2,
                                     ease: "easeInOut",
+                                }}
+                                style={{
+                                    transformOrigin: "center center",
                                 }}
                             />
                         </span>
                     </motion.button>
                 )}
 
-                <AnimatePresence initial={false}>
-                    {navigationOpen && (
-                        <motion.div
-                            key="bottom-navigation-panel"
-                            id="bottom-navigation-panel"
-                            initial={{
-                                opacity: 0,
-                                width: 0,
-                            }}
-                            animate={{
-                                opacity: 1,
-                                width: "auto",
-                            }}
-                            exit={{
-                                opacity: 0,
-                                width: 0,
-                            }}
-                            onAnimationStart={() =>
-                                handlePanelAnimationStart(panelTransitionId)
-                            }
-                            onAnimationComplete={() =>
-                                handlePanelAnimationComplete(panelTransitionId)
-                            }
-                            transition={{
-                                opacity: {
-                                    duration: 0.16,
-                                    ease: "easeOut",
-                                },
-                                width: {
-                                    duration: 0.28,
-                                    ease: [0.22, 1, 0.36, 1],
-                                },
-                            }}
-                            style={{
-                                willChange: "width, opacity",
-                            }}
-                            className="
-                                relative min-w-0 shrink-0 h-full
-                                rounded-[24px] backdrop-blur-sm
-                            "
-                        >
-                            <div
-                                ref={menuRef}
-                                style={{
-                                    transform: "translateZ(0)",
-                                    willChange: "backdrop-filter",
+                <div className="flex items-stretch gap-2">
+                    <AnimatePresence initial={false}>
+                        {navigationOpen && (
+                            <motion.div
+                                key="bottom-navigation-panel"
+                                id="bottom-navigation-panel"
+                                initial={{
+                                    opacity: 0,
+                                    y: 20,
                                 }}
-                                className={`relative w-max
-                                    rounded-full border border-curr/30
-                                    p-1 ${isMobile ? "px-[4px]" : "px-[6px]"}
-                                    shadow-[inset_0_0_16px_0px]
-                                    shadow-curr/30
-                                    row-center-0`}
-                            >
-                                <ButtonBottomMenu
-                                    textButton="Main"
-                                    indexBlock={0}
-                                />
-                                <ButtonBottomMenu
-                                    textButton="Exp"
-                                    indexBlock={1}
-                                />
-                                <ButtonBottomMenu
-                                    textButton="Stack"
-                                    indexBlock={2}
-                                />
-                                <ButtonBottomMenu
-                                    textButton="Projects"
-                                    indexBlock={3}
-                                />
-                                <ButtonBottomMenu
-                                    textButton="Contact"
-                                    indexBlock={4}
-                                />
-
-                                <motion.div
-                                    ref={trackRef}
-                                    initial={false}
-                                    animate={{
-                                        opacity: trackVisible ? 1 : 0,
-                                    }}
-                                    transition={{
-                                        opacity: {
-                                            duration: 0.35,
-                                            ease: "easeOut",
-                                        },
-                                    }}
-                                    className="
-                                        pointer-events-none absolute
-                                        rounded-full border border-curr/30
-                                        bg-curr/5
-                                        shadow-[inset_0_0_16px_0px]
-                                        shadow-curr/30
-                                    "
-                                />
-                            </div>
-                        </motion.div>
-                    )}
-                </AnimatePresence>
-
-                <AnimatePresence initial={false}>
-                    {navigationOpen && (
-                        <motion.div
-                            key="cv-button"
-                            initial={{
-                                opacity: 0,
-                                width: 0,
-                                scale: 0.9,
-                            }}
-                            animate={{
-                                opacity: 1,
-                                width: buttonSize,
-                                scale: 1,
-                            }}
-                            exit={{
-                                opacity: 0,
-                                width: 0,
-                                scale: 0.9,
-                            }}
-                            transition={{
-                                duration: 0.25,
-                                ease: [0.22, 1, 0.36, 1],
-                            }}
-                            style={{
-                                height: buttonSize,
-                            }}
-                            className="
-                                relative
-                                shrink-0
-                                
-                                "
-                            onMouseEnter={
-                                !isMobile ? () => setCvOpen(true) : undefined
-                            }
-                            onMouseLeave={!isMobile ? closeCvMenu : undefined}
-                        >
-                            <motion.button
-                                type="button"
-                                data-cursor="button"
-                                data-color="curr"
-                                data-shadow="0 0 50px 20px"
-                                aria-label="CV"
-                                aria-haspopup={isMobile ? "dialog" : "menu"}
-                                aria-expanded={cvOpen}
-                                onClick={
-                                    isMobile
-                                        ? () => setCvOpen((value) => !value)
-                                        : undefined
+                                animate={{
+                                    opacity: 1,
+                                    y: 0,
+                                }}
+                                exit={{
+                                    opacity: 0,
+                                    y: 24,
+                                }}
+                                onAnimationStart={() =>
+                                    handlePanelAnimationStart(panelTransitionId)
                                 }
-                                whileTap={{ scale: 0.9 }}
+                                onAnimationComplete={() =>
+                                    handlePanelAnimationComplete(
+                                        panelTransitionId,
+                                    )
+                                }
+                                transition={{
+                                    opacity: {
+                                        duration: 0.22,
+                                        ease: "easeOut",
+                                    },
+                                    y: {
+                                        duration: 0.3,
+                                        ease: [0.22, 1, 0.36, 1],
+                                    },
+                                }}
                                 style={{
-                                    width: buttonSize,
-                                    height: buttonSize,
+                                    willChange: "transform, opacity",
                                 }}
                                 className="
-                                    box-border flex shrink-0
-                                    items-center justify-center
-                                    rounded-full border border-curr/30
-                                    p-0 text-[12px]! text-curr
-                                    shadow-[inset_0_0_16px_0px]
-                                    shadow-curr/30
-                                    backdrop-blur-sm
+                                    relative min-w-0 shrink-0 h-max
+                                    rounded-[24px] backdrop-blur-sm
                                 "
                             >
-                                <DynamicSvgIcon
-                                    name="cv"
-                                    className="size-6/10 fill-curr"
-                                />
-                            </motion.button>
+                                <div
+                                    ref={menuRef}
+                                    style={{
+                                        transform: "translateZ(0)",
+                                        willChange: "backdrop-filter",
+                                    }}
+                                    className={`relative w-max
+                                        rounded-full border border-curr/30
+                                        p-1 ${isMobile ? "px-[4px]" : "px-[6px]"}
+                                        shadow-[inset_0_0_16px_0px]
+                                        shadow-curr/30
+                                        row-center-0`}
+                                >
+                                    <ButtonBottomMenu
+                                        textButton="Main"
+                                        indexBlock={0}
+                                    />
+                                    <ButtonBottomMenu
+                                        textButton="Exp"
+                                        indexBlock={1}
+                                    />
+                                    <ButtonBottomMenu
+                                        textButton="Stack"
+                                        indexBlock={2}
+                                    />
+                                    <ButtonBottomMenu
+                                        textButton="Projects"
+                                        indexBlock={3}
+                                    />
+                                    <ButtonBottomMenu
+                                        textButton="Contact"
+                                        indexBlock={4}
+                                    />
 
-                            {!isMobile && (
-                                <AnimatePresence>
-                                    {cvOpen && (
-                                        <motion.div
-                                            key="cv-desktop-menu"
-                                            role="menu"
-                                            initial={{
-                                                opacity: 0,
-                                                y: 8,
-                                                scale: 0.97,
-                                            }}
-                                            animate={{
-                                                opacity: 1,
-                                                y: 0,
-                                                scale: 1,
-                                            }}
-                                            exit={{
-                                                opacity: 0,
-                                                y: 6,
-                                                scale: 0.98,
-                                            }}
-                                            transition={{
-                                                duration: 0.2,
-                                                ease: [0.22, 1, 0.36, 1],
-                                            }}
-                                            className="
-                                                absolute bottom-full right-0
-                                                mb-1 w-50
-                                                origin-bottom-right
-                                                before:content-['']
-                                                before:block
-                                                before:absolute
-                                                before:w-[calc(100%+20px)]
-                                                before:h-[calc(100%+20px)]
-                                                before:-z-1
-                                                before:absolute
-                                                before:left-1/2
-                                                before:top-1/2
-                                                before:-translate-x-1/2
-                                                before:-translate-y-1/2
-                                            "
-                                        >
-                                            {menuContent}
-                                        </motion.div>
-                                    )}
-                                </AnimatePresence>
-                            )}
-                        </motion.div>
-                    )}
-                </AnimatePresence>
+                                    <motion.div
+                                        ref={trackRef}
+                                        initial={false}
+                                        animate={{
+                                            opacity: trackVisible ? 1 : 0,
+                                        }}
+                                        transition={{
+                                            opacity: {
+                                                duration: 0.35,
+                                                ease: "easeOut",
+                                            },
+                                        }}
+                                        className="
+                                            pointer-events-none absolute
+                                            rounded-full border border-curr/30
+                                            bg-curr/5
+                                            shadow-[inset_0_0_16px_0px]
+                                            shadow-curr/30
+                                        "
+                                    />
+                                </div>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+
+                    <AnimatePresence initial={false}>
+                        {navigationOpen && (
+                            <motion.div
+                                key="cv-button"
+                                initial={{
+                                    opacity: 0,
+                                    x: 20,
+                                }}
+                                animate={{
+                                    opacity: 1,
+                                    x: 0,
+                                }}
+                                exit={{
+                                    opacity: 0,
+                                    x: 24,
+                                }}
+                                transition={{
+                                    opacity: {
+                                        duration: 0.22,
+                                        ease: "easeOut",
+                                    },
+                                    x: {
+                                        duration: 0.3,
+                                        ease: [0.22, 1, 0.36, 1],
+                                    },
+                                }}
+                                style={{
+                                    height: buttonSize,
+                                    willChange: "transform, opacity",
+                                }}
+                                className="relative shrink-0 backdrop-blur-sm rounded-full"
+                                onMouseEnter={
+                                    !isMobile
+                                        ? () => setCvOpen(true)
+                                        : undefined
+                                }
+                                onMouseLeave={
+                                    !isMobile ? closeCvMenu : undefined
+                                }
+                            >
+                                <motion.button
+                                    type="button"
+                                    data-cursor="button"
+                                    data-color="curr"
+                                    data-shadow="0 0 50px 20px"
+                                    aria-label="CV"
+                                    aria-haspopup={isMobile ? "dialog" : "menu"}
+                                    aria-expanded={cvOpen}
+                                    onClick={
+                                        isMobile
+                                            ? () => setCvOpen((value) => !value)
+                                            : undefined
+                                    }
+                                    whileTap={{ scale: 0.9 }}
+                                    style={{
+                                        width: buttonSize,
+                                        height: buttonSize,
+                                    }}
+                                    className="
+                                        box-border flex shrink-0
+                                        items-center justify-center
+                                        rounded-full border border-curr/30
+                                        p-0 text-[12px]! text-curr
+                                        shadow-[inset_0_0_16px_0px]
+                                        shadow-curr/30
+                                        
+                                    "
+                                >
+                                    <DynamicSvgIcon
+                                        name="cv"
+                                        className="size-6/10 fill-curr"
+                                    />
+                                </motion.button>
+
+                                {!isMobile && (
+                                    <AnimatePresence>
+                                        {cvOpen && (
+                                            <motion.div
+                                                key="cv-desktop-menu"
+                                                role="menu"
+                                                initial={{
+                                                    opacity: 0,
+                                                    y: 8,
+                                                    scale: 0.97,
+                                                }}
+                                                animate={{
+                                                    opacity: 1,
+                                                    y: 0,
+                                                    scale: 1,
+                                                }}
+                                                exit={{
+                                                    opacity: 0,
+                                                    y: 6,
+                                                    scale: 0.98,
+                                                }}
+                                                transition={{
+                                                    duration: 0.2,
+                                                    ease: [0.22, 1, 0.36, 1],
+                                                }}
+                                                className="
+                                                    absolute bottom-full right-0
+                                                    mb-1 w-50
+                                                    origin-bottom-right
+                                                    before:content-['']
+                                                    before:block
+                                                    before:absolute
+                                                    before:w-[calc(100%+20px)]
+                                                    before:h-[calc(100%+20px)]
+                                                    before:-z-1
+                                                    before:left-1/2
+                                                    before:top-1/2
+                                                    before:-translate-x-1/2
+                                                    before:-translate-y-1/2
+                                                "
+                                            >
+                                                {menuContent}
+                                            </motion.div>
+                                        )}
+                                    </AnimatePresence>
+                                )}
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+                </div>
             </div>
 
             {isMobile &&

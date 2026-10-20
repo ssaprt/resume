@@ -11,7 +11,7 @@ export const ToTop = () => {
     const visible = blocks[0]?.visible ?? true;
     const { isMobile } = useDevice();
 
-    const style = isMobile ? "fixed bottom-13 left-2" : "";
+    const style = isMobile ? "fixed bottom-13 left-[7px] w-8 h-8" : "";
 
     return (
         <motion.div
@@ -25,7 +25,6 @@ export const ToTop = () => {
                 scale: visible ? 0 : 1,
                 y: visible ? 40 : 0,
                 rotate: visible ? -90 : 0,
-                opacity: visible ? 0 : 1,
             }}
             transition={
                 visible
@@ -43,14 +42,16 @@ export const ToTop = () => {
         >
             <div
                 className={`
-                           w-5
-                           h-5
+                           ${isMobile ? "w-8 h-8" : "w-5 h-5"}
                            rounded-full
-                           bg-curr/30
+                           border border-curr/30
+                            backdrop-blur-sm
+                            shadow-[inset_0_0_16px_0px]
+                            shadow-curr/30
                            flex
                            items-center
                            justify-center
-                           ${hovered ? "scale-130" : "scale-100"}
+                           ${hovered ? (isMobile ? "scale-110" : "scale-130") : "scale-100"}
                            transition-transform
                            duration-200
                            ease
