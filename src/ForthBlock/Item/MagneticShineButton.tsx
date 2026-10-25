@@ -11,7 +11,6 @@ export const MagneticShineButton = ({
     const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
     const [isHovered, setIsHovered] = useState(false);
 
-    // Отслеживаем позицию мыши внутри кнопки
     const handleMouseMove = (e: React.MouseEvent<HTMLButtonElement>) => {
         if (!buttonRef.current) return;
         const rect = buttonRef.current.getBoundingClientRect();
@@ -47,15 +46,16 @@ export const MagneticShineButton = ({
                     text-curr
                     backdrop-blur-[2px]
                     mt-4
+                    bg-curr/10
                 "
             >
                 <div
-                    className="absolute inset-y-0 -left-[25%] pointer-events-none w-[150%] bg-gradient-to-r from-transparent via-curr/20 to-transparent opacity-70"
+                    className="absolute inset-y-0 -left-[25%] pointer-events-none w-[150%] bg-gradient-to-r from-transparent via-curr/50 to-transparent opacity-70"
                     style={{ animation: "shine 4s infinite linear" }}
                 />
 
                 <div
-                    className="absolute pointer-events-none rounded-full bg-curr/10 transition-all duration-500 ease-out"
+                    className="absolute pointer-events-none rounded-full bg-curr/15 transition-all duration-500 ease-out"
                     style={{
                         left: mousePos.x,
                         top: mousePos.y,
@@ -65,7 +65,7 @@ export const MagneticShineButton = ({
                     }}
                 />
 
-                <span className="relative z-10 pointer-events-none">
+                <span className="relative z-10 pointer-events-none text-curr font-ops!">
                     {text}
                 </span>
             </button>

@@ -12,7 +12,7 @@ export const ScrollBar = ({
                 widthTrack: "8px",
                 superimposition: "over",
                 heightTrack: "86%",
-                className: "mt-10!",
+                className: "mt-6!",
             }}
             optionsTheme={{
                 thumb: {
