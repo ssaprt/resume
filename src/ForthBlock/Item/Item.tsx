@@ -1,16 +1,24 @@
 import { motion, type MotionStyle } from "framer-motion";
-import { Fragment, useEffect, useRef, type PointerEvent } from "react";
+import {
+    Fragment,
+    useEffect,
+    useRef,
+    useState,
+    type PointerEvent,
+} from "react";
 import { DynamicSvgIcon } from "../../components/Icons/DynamicSvgIcon";
 import { useDevice } from "../../scroll/useDevice";
 import { Videos } from "../Videos";
+import { MagneticShineButton } from "./MagneticShineButton";
+import { ModalContent } from "./ModalContent/ModalContent";
 import { ProjectSpendTime } from "./ProjectSpendTime";
 import { colors } from "./shared/config/colors.config";
 import { ContextItem } from "./shared/context/ContextItem";
 import type { ItemContextProps } from "./shared/types/Item.type";
 import { SubBlock } from "./SubBlock";
 
-const MAX_ROTATE_X = 4;
-const MAX_ROTATE_Y = 4;
+const MAX_ROTATE_X = 2;
+const MAX_ROTATE_Y = 2;
 const PERSPECTIVE = 800;
 const TILT_SPEED = 0.08;
 
@@ -28,9 +36,11 @@ export const Item = ({
     text,
     projectProps,
     dir,
+    learning,
 }: ItemContextProps) => {
     const color = colors[colorName];
     const { isMobile } = useDevice();
+    const [open, setOpen] = useState(false);
 
     const wrapperRef = useRef<HTMLDivElement>(null);
     const tiltRef = useRef<HTMLDivElement>(null);
@@ -143,6 +153,7 @@ export const Item = ({
                 srcMobile,
                 title,
                 projectProps,
+                learning,
             }}
         >
             <motion.div
@@ -150,7 +161,8 @@ export const Item = ({
                     wrapperRef.current = element;
                 }}
                 data-cursor="magnetic"
-                data-color={colorName}
+                data-color="curr"
+                data-shadow="0 0 200px 60px"
                 className="h-full w-full"
                 onPointerMove={isMobile ? undefined : handlePointerMove}
                 onPointerLeave={isMobile ? undefined : handlePointerLeave}
@@ -255,8 +267,15 @@ export const Item = ({
                             ))}
                         </div>
                     </div>
+                    <div className="mt-auto perspective-[1000px] ml-auto">
+                        <MagneticShineButton
+                            text="Learning project way"
+                            onClick={() => setOpen(true)}
+                        />
+                    </div>
                 </motion.div>
             </motion.div>
+            <ModalContent open={open} setOpen={setOpen} />
         </ContextItem.Provider>
     );
 };

@@ -5,6 +5,7 @@ import { DynamicSvgIcon } from "../components/Icons/DynamicSvgIcon";
 import { ProcessingStatus } from "../components/loaders/ProcessingStatus";
 import SplitText from "../components/text/ScatterText";
 import { useDevice } from "../scroll/useDevice";
+import { useScrollElementMotion } from "../scroll/useScroll";
 import { useSendMailMutation } from "../services/mailer";
 import { Field } from "./Field";
 import { Icon } from "./Icon";
@@ -96,8 +97,10 @@ const getStepState = (
     return "pending";
 };
 
-export const Fields = () => {
-    const { leaveProgress, leaveDirection } = useFiveBlockContextProvider();
+export const Fields = ({ unused = false }: { unused?: boolean }) => {
+    const { leaveProgress: lp, leaveDirection: ld } =
+        useFiveBlockContextProvider();
+    const { ref, leaveProgress, leaveDirection } = useScrollElementMotion();
 
     const [status, setStatus] = useState<SubmitStatus>("idle");
     const [finished, setFinished] = useState(false);
@@ -212,6 +215,7 @@ export const Fields = () => {
     return (
         <FormProvider {...methods}>
             <form
+                ref={ref}
                 noValidate
                 onSubmit={methods.handleSubmit(onSubmit)}
                 className={`${overlay} h-auto rounded-[12px] col-start-8 ${shadow}`}
@@ -279,7 +283,11 @@ export const Fields = () => {
                         dir={1}
                         split={0}
                         as="h1"
-                        scroll={{ leaveProgress, leaveDirection }}
+                        scroll={
+                            unused
+                                ? { leaveProgress: lp, leaveDirection: ld }
+                                : { leaveProgress, leaveDirection }
+                        }
                     />
 
                     <SplitText
@@ -302,7 +310,11 @@ export const Fields = () => {
                         dir={1}
                         split={0}
                         as="h1"
-                        scroll={{ leaveProgress, leaveDirection }}
+                        scroll={
+                            unused
+                                ? { leaveProgress: lp, leaveDirection: ld }
+                                : { leaveProgress, leaveDirection }
+                        }
                     />
                 </div>
 

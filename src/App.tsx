@@ -107,7 +107,7 @@ function App() {
                 falloff={22}
                 baseRadius={1}
                 maxRadius={2}
-                baseOpacity={0.12}
+                baseOpacity={0.22}
                 maxOpacity={0.35}
                 distortion={28}
                 smoothness={1}

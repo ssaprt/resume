@@ -21,4 +21,5 @@ export type ItemContextProps = {
     text: Text;
     projectProps: ItemProps[];
     dir: -1 | 1;
+    learning?: React.ReactNode[];
 };

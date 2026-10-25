@@ -35,12 +35,15 @@ type Point = {
     y: number;
     currentX: number;
     currentY: number;
-    // Взрыв: 0 — точка не затронута
     blastHitAt: number;
     blastRebornAt: number;
     blastDirX: number;
     blastDirY: number;
     blastDistance: number;
+    // Оптимизация: кеш для батчинга
+    drawX: number;
+    drawY: number;
+    drawR: number;
 };
 
 type CursorMode = {
@@ -100,7 +103,6 @@ const CURSOR_MODES: Record<string, CursorMode> = {
         circleOpacity: 1,
         circleScale: 1,
     },
-
     button: {
         scale: 1,
         opacity: 1,
@@ -109,21 +111,13 @@ const CURSOR_MODES: Record<string, CursorMode> = {
         icon: (
             <DynamicSvgIcon
                 name="left_click"
-                className="
-                    relative
-                    size-5
-                    fill-current
-                    text-current
-                    [&_*]:!fill-current
-                    [&_*]:!stroke-current
-                "
+                className="relative size-5 fill-current text-current [&_*]:!fill-current [&_*]:!stroke-current"
             />
         ),
         iconClassName: "",
         circleOpacity: 0,
         circleScale: 0.8,
     },
-
     move: {
         scale: 1,
         opacity: 1,
@@ -132,21 +126,13 @@ const CURSOR_MODES: Record<string, CursorMode> = {
         icon: (
             <DynamicSvgIcon
                 name="move"
-                className="
-                    relative
-                    size-5
-                    fill-current
-                    text-current
-                    [&_*]:!fill-current
-                    [&_*]:!stroke-current
-                "
+                className="relative size-5 fill-current text-current [&_*]:!fill-current [&_*]:!stroke-current"
             />
         ),
         iconClassName: "",
         circleOpacity: 0,
         circleScale: 0.8,
     },
-
     magnetic: {
         scale: 1,
         opacity: 1,
@@ -155,21 +141,13 @@ const CURSOR_MODES: Record<string, CursorMode> = {
         icon: (
             <DynamicSvgIcon
                 name="magnetic"
-                className="
-                    relative
-                    size-5
-                    fill-current
-                    text-current
-                    [&_*]:!fill-current
-                    [&_*]:!stroke-current
-                "
+                className="relative size-5 fill-current text-current [&_*]:!fill-current [&_*]:!stroke-current"
             />
         ),
         iconClassName: "",
         circleOpacity: 0,
         circleScale: 0.8,
     },
-
     write: {
         scale: 1,
         opacity: 1,
@@ -178,14 +156,7 @@ const CURSOR_MODES: Record<string, CursorMode> = {
         icon: (
             <DynamicSvgIcon
                 name="pen"
-                className="
-                    relative
-                    size-5
-                    fill-current
-                    text-current
-                    [&_*]:!fill-current
-                    [&_*]:!stroke-current
-                "
+                className="relative size-5 fill-current text-current [&_*]:!fill-current [&_*]:!stroke-current"
             />
         ),
         iconClassName: "",
@@ -198,10 +169,7 @@ const DEFAULT_CURSOR_MODE = CURSOR_MODES.default;
 const DEFAULT_CURSOR_COLOR = "rgb(100 116 139)";
 const DEFAULT_SHADOW = "0 0 500px 50px";
 
-/* ───────────── Осьминог: тело ───────────── */
-
 const OCTOPUS_MAX_SPEED = 14;
-
 const MANTLE_BLOBS = [
     { offset: -6, scale: 1 },
     { offset: 12, scale: 1.15 },
@@ -221,30 +189,19 @@ const TENTACLE_WAVE_IDLE_SPEED = 0.05;
 const JET_STRENGTH = 0.6;
 const MANTLE_SQUEEZE = 0.12;
 
-const OCTOPUS_CATCH_CHANCE = 0.07;
+const OCTOPUS_CATCH_CHANCE = 0.5;
 const OCTOPUS_CATCH_RADIUS = 18;
 
-/* ───────────── Осьминог: жизнедеятельность ───────────── */
-
-// Сколько осьминог сидит за границей между выходами (мс)
 const OCTOPUS_HIDDEN_MIN = 2000;
 const OCTOPUS_HIDDEN_MAX = 6500;
-// Пауза перед самым первым выходом (мс)
 const OCTOPUS_FIRST_DELAY_MIN = 800;
 const OCTOPUS_FIRST_DELAY_MAX = 2000;
-// Предохранитель: максимум времени на экране за один выход (мс)
 const OCTOPUS_MAX_ACTIVE = 90000;
-
-// Множители относительно octopusSpeed
 const OCTOPUS_TRANSIT_SPEED = 1.7;
 const OCTOPUS_DASH_SPEED = 3.4;
 const OCTOPUS_HOLD_SPEED = 0.3;
-
-// Радиус, в котором осьминог «парит» на месте при остановке
 const OCTOPUS_HOLD_RADIUS = 40;
-// Амплитуда покачивания курса (рад)
 const OCTOPUS_WANDER = 0.15;
-// На сколько дальше hideDistance лежит точка выхода
 const OCTOPUS_EXIT_EXTRA = 70;
 
 const SCENARIO_WEIGHTS: Record<ScenarioName, number> = {
@@ -257,24 +214,14 @@ const SCENARIO_WEIGHTS: Record<ScenarioName, number> = {
     weave: 2,
 };
 
-/* ───────────── Взрыв сетки ───────────── */
-
-// За сколько волна доходит до самого дальнего угла (мс)
 const EXPLOSION_WAVE_DURATION = 2600;
-// <1 — фронт волны замедляется к краям
 const EXPLOSION_WAVE_CURVE = 0.85;
-// За сколько мс до фронта точки начинают вспыхивать
 const EXPLOSION_LEAD = 220;
-// Предварительный толчок точки перед вылетом (px)
 const EXPLOSION_PRE_PUSH = 6;
-// Вспышка точки в момент удара: размер (от maxRadius) и яркость
 const EXPLOSION_FLASH_SIZE = 1.35;
 const EXPLOSION_FLASH_OPACITY = 0.95;
-// Вспышка в эпицентре (мс)
 const EXPLOSION_FLASH_DURATION = 500;
-// Полёт точки и её угасание (мс)
 const EXPLOSION_FLY_DURATION = 1300;
-// Дальность полёта: у эпицентра MAX, затухает с расстоянием до MIN
 const EXPLOSION_FLY_MIN = 28;
 const EXPLOSION_FLY_MAX = 230;
 const EXPLOSION_FLY_DECAY = 650;
@@ -282,15 +229,11 @@ const EXPLOSION_ANGLE_JITTER = 0.35;
 const EXPLOSION_CURSOR_BOOST = 0.65;
 const EXPLOSION_CURSOR_DIRECTION = 0.2;
 const EXPLOSION_SHAPE_DIRECTION = 0.65;
-// Вторая волна: новая сетка отрастает от центра к краям
 const EXPLOSION_REGROW_START = 2200;
 const EXPLOSION_REGROW_SPREAD = 5500;
 const EXPLOSION_REGROW_JITTER = 700;
-// Сколько растёт одна новая точка (мс)
 const EXPLOSION_GROW_DURATION = 2400;
-// Насколько новая точка «всплывает» наружу, пока растёт (px)
 const EXPLOSION_REGROW_DRIFT = 10;
-// Пауза после того, как сетка отросла, до возвращения осьминога (мс)
 const EXPLOSION_RETURN_DELAY = 3000;
 
 const lerp = (current: number, target: number, amount: number) => {
@@ -306,16 +249,10 @@ const rand = (min: number, max: number) => {
 };
 
 const resolveCursorColor = (value?: string) => {
-    if (!value) {
-        return DEFAULT_CURSOR_COLOR;
-    }
-
+    if (!value) return DEFAULT_CURSOR_COLOR;
     return `var(--${value})`;
 };
 
-/* ───────────── Сценарии осьминога ───────────── */
-
-// Границы: 0 — верх, 1 — право, 2 — низ, 3 — лево
 const SIDE_INWARD = [
     { x: 0, y: 1 },
     { x: -1, y: 0 },
@@ -323,7 +260,6 @@ const SIDE_INWARD = [
     { x: 1, y: 0 },
 ];
 
-// t — положение вдоль границы (0..1), depth > 0 — за экраном, depth < 0 — внутри
 const borderPoint = (
     side: number,
     t: number,
@@ -343,7 +279,6 @@ const borderPoint = (
     }
 };
 
-// Расстояние между границей и противоположной ей
 const crossLength = (side: number, w: number, h: number) => {
     return side % 2 === 0 ? h : w;
 };
@@ -378,19 +313,13 @@ const pickScenario = (last: ScenarioName | null): ScenarioName => {
     const names = (Object.keys(SCENARIO_WEIGHTS) as ScenarioName[]).filter(
         (name) => name !== last,
     );
-
     const total = names.reduce((sum, name) => sum + SCENARIO_WEIGHTS[name], 0);
-
     let roll = Math.random() * total;
 
     for (const name of names) {
         roll -= SCENARIO_WEIGHTS[name];
-
-        if (roll <= 0) {
-            return name;
-        }
+        if (roll <= 0) return name;
     }
-
     return names[names.length - 1];
 };
 
@@ -399,7 +328,6 @@ const buildScenario = (
     context: ScenarioContext,
 ): OctopusStep[] => {
     const { w, h, side, t, size, hideDistance } = context;
-
     const across = crossLength(side, w, h);
     const exitDepth = hideDistance + OCTOPUS_EXIT_EXTRA * size;
 
@@ -416,73 +344,48 @@ const buildScenario = (
             w,
             h,
         );
-
         return go(point.x, point.y, speed, wander);
     };
 
     switch (name) {
-        // Дошёл до центра и ушёл в случайную сторону
         case "cross": {
             const x = w * rand(0.35, 0.65);
             const y = h * rand(0.35, 0.65);
-
             return [go(x, y), exitAt(randomSideExcept(side), rand(0.15, 0.85))];
         }
-
-        // Зашёл на некоторую глубину, прошёл вдоль границы, ушёл обратно
         case "skirt": {
             const depth = Math.min(rand(150, 280) * size, across * 0.4);
-
             const preferred = t < 0.5 ? 1 : -1;
             const dirSign = Math.random() < 0.8 ? preferred : -preferred;
-
             const room = dirSign > 0 ? 0.95 - t : t - 0.05;
             const travel = Math.max(0.15, Math.min(room, rand(0.35, 0.65)));
-
             const pace = rand(0.9, 1.6);
-
             const first = borderPoint(side, t, -depth, w, h);
             const steps: OctopusStep[] = [go(first.x, first.y, pace)];
 
-            const count = 3;
-
-            for (let i = 1; i <= count; i++) {
-                const along = clamp(
-                    t + (dirSign * travel * i) / count,
-                    0.03,
-                    0.97,
-                );
+            for (let i = 1; i <= 3; i++) {
+                const along = clamp(t + (dirSign * travel * i) / 3, 0.03, 0.97);
                 const wobble = (i % 2 === 0 ? -1 : 1) * rand(10, 35) * size;
                 const point = borderPoint(side, along, -(depth + wobble), w, h);
-
                 steps.push(go(point.x, point.y, pace));
             }
-
             steps.push(exitAt(side, t + dirSign * travel, pace));
-
             return steps;
         }
-
-        // Вдоль стены, огибает угол, вдоль соседней стены, уходит
         case "corner": {
             const depth = Math.min(rand(130, 220) * size, w * 0.35, h * 0.35);
-
             const nearer = t < 0.5 ? 0 : 1;
             const cornerEnd = Math.random() < 0.8 ? nearer : 1 - nearer;
-
             const adjacent = [
                 [3, 1],
                 [0, 2],
                 [3, 1],
                 [0, 2],
             ][side][cornerEnd];
-
             const vertical = side % 2 === 1 ? side : adjacent;
             const horizontal = side % 2 === 0 ? side : adjacent;
-
             const cornerX = vertical === 3 ? depth : w - depth;
             const cornerY = horizontal === 0 ? depth : h - depth;
-
             const adjacentCornerT =
                 adjacent % 2 === 0
                     ? vertical === 3
@@ -491,13 +394,11 @@ const buildScenario = (
                     : horizontal === 0
                       ? 0
                       : 1;
-
             const adjacentT =
                 adjacentCornerT === 0 ? rand(0.25, 0.5) : rand(0.5, 0.75);
 
             const first = borderPoint(side, t, -depth, w, h);
             const along = borderPoint(adjacent, adjacentT, -depth, w, h);
-
             return [
                 go(first.x, first.y),
                 go(cornerX, cornerY),
@@ -505,19 +406,14 @@ const buildScenario = (
                 exitAt(adjacent, adjacentT),
             ];
         }
-
-        // Выглянул, повисел, спрятался
         case "peek": {
             const depth = rand(40, 100) * size;
             const shift = rand(-0.12, 0.12);
-
             const first = borderPoint(side, t, -depth, w, h);
-
             const steps: OctopusStep[] = [
                 go(first.x, first.y, 1.2, 0.6, 22 * size),
                 hold(first.x, first.y, rand(2200, 4200)),
             ];
-
             if (Math.random() < 0.55) {
                 const second = borderPoint(
                     side,
@@ -526,44 +422,30 @@ const buildScenario = (
                     w,
                     h,
                 );
-
                 steps.push(
                     go(second.x, second.y, 0.9, 0.6, 22 * size),
                     hold(second.x, second.y, rand(1500, 3000)),
                 );
             }
-
             steps.push(exitAt(side, t + shift, OCTOPUS_TRANSIT_SPEED, 0.4));
-
             return steps;
         }
-
-        // Несколько остановок в разных местах экрана
         case "explore": {
             const stops = 1 + Math.floor(Math.random() * 3);
             const steps: OctopusStep[] = [];
-
             for (let i = 0; i < stops; i++) {
                 const x = w * rand(0.15, 0.85);
                 const y = h * rand(0.15, 0.85);
-
                 steps.push(go(x, y, rand(1.2, 1.9)));
-
-                if (Math.random() < 0.6) {
+                if (Math.random() < 0.6)
                     steps.push(hold(x, y, rand(1500, 3200)));
-                }
             }
-
             steps.push(exitAt(Math.floor(Math.random() * 4), rand(0.15, 0.85)));
-
             return steps;
         }
-
-        // Быстрый рывок через экран
         case "dash": {
             const exitSide =
                 Math.random() < 0.7 ? (side + 2) % 4 : randomSideExcept(side);
-
             const middle = borderPoint(
                 side,
                 rand(0.2, 0.8),
@@ -571,22 +453,16 @@ const buildScenario = (
                 w,
                 h,
             );
-
             return [
                 go(middle.x, middle.y, OCTOPUS_DASH_SPEED, 0.3),
                 exitAt(exitSide, rand(0.15, 0.85), OCTOPUS_DASH_SPEED, 0.3),
             ];
         }
-
-        // Слалом поперёк экрана
         case "weave": {
             const count = 4 + Math.floor(Math.random() * 3);
             const amplitude = rand(0.12, 0.22);
-
             let sign = Math.random() < 0.5 ? 1 : -1;
-
             const steps: OctopusStep[] = [];
-
             for (let k = 1; k <= count; k++) {
                 const point = borderPoint(
                     side,
@@ -595,14 +471,10 @@ const buildScenario = (
                     w,
                     h,
                 );
-
                 steps.push(go(point.x, point.y, 1.6, 0.5));
-
                 sign = -sign;
             }
-
             steps.push(exitAt((side + 2) % 4, t, 1.6, 0.5));
-
             return steps;
         }
     }
@@ -633,32 +505,65 @@ export default function DotGrid({
     className,
 }: Props) {
     const { isMobile } = useDevice();
-
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const cursorRef = useRef<HTMLDivElement>(null);
     const circleRef = useRef<HTMLDivElement>(null);
     const isReady = useAssetReady();
 
-    const mouseRef = useRef({
-        x: -1000,
-        y: -1000,
+    // Оптимизация хуков: Избегаем реинициализации всего эффекта при изменении каждого пропа
+    const configRef = useRef({
+        cursorRadius,
+        falloff,
+        baseRadius,
+        maxRadius,
+        baseOpacity,
+        maxOpacity,
+        distortion,
+        smoothness,
+        jellySmoothness,
+        color,
+        cursorDotSize,
+        circleOpacity,
+        octopusSpeed,
+        octopusFleeDistance,
+        tentacleCount,
+        tentacleSegments,
+        tentacleSpacing,
+        tentacleWaveAmplitude,
+        tentacleWaveLength,
     });
 
-    const targetMouseRef = useRef({
-        x: -1000,
-        y: -1000,
+    useEffect(() => {
+        Object.assign(configRef.current, {
+            cursorRadius,
+            falloff,
+            baseRadius,
+            maxRadius,
+            baseOpacity,
+            maxOpacity,
+            distortion,
+            smoothness,
+            jellySmoothness,
+            color,
+            cursorDotSize,
+            circleOpacity,
+            octopusSpeed,
+            octopusFleeDistance,
+            tentacleCount,
+            tentacleSegments,
+            tentacleSpacing,
+            tentacleWaveAmplitude,
+            tentacleWaveLength,
+        });
     });
 
+    const mouseRef = useRef({ x: -1000, y: -1000 });
+    const targetMouseRef = useRef({ x: -1000, y: -1000 });
     const pointsRef = useRef<Point[]>([]);
     const animationRef = useRef<number>(0);
-
     const clickRef = useRef(0);
     const clickTargetRef = useRef(0);
-
-    const cursorModeRef = useRef({
-        target: "default",
-    });
-
+    const cursorModeRef = useRef({ target: "default" });
     const cursorColorRef = useRef(DEFAULT_CURSOR_COLOR);
     const shadowRef = useRef(DEFAULT_SHADOW);
 
@@ -673,94 +578,36 @@ export default function DotGrid({
 
     const [cursorMode, setCursorMode] =
         useState<CursorMode>(DEFAULT_CURSOR_MODE);
-
     const [cursorColor, setCursorColor] = useState(DEFAULT_CURSOR_COLOR);
     const [shadow, setShadow] = useState(DEFAULT_SHADOW);
 
     useEffect(() => {
         const canvas = canvasRef.current;
-
-        if (!canvas) {
-            return;
-        }
-
+        if (!canvas) return;
         const ctx = canvas.getContext("2d");
+        if (!ctx) return;
 
-        if (!ctx) {
-            return;
-        }
-
-        // Единый масштаб сцены: сетка, точки, смещение и осьминог уменьшаются
-        // вместе, поэтому осьминог на мобильном «разрешается» тем же числом точек
         const uiScale = isMobile ? mobileScale : 1;
-
         const grid = gridSize * uiScale;
-        const distortionPx = distortion * uiScale;
-        const dotBase = baseRadius * uiScale;
-        const dotMax = maxRadius * uiScale;
 
-        const octopusSize = uiScale;
-        const baseSpeed = octopusSpeed * uiScale;
-
-        const pointBaseOpacity = isMobile
-            ? Math.max(baseOpacity, 0.45)
-            : baseOpacity;
-
-        const pointMaxOpacity = isMobile
-            ? Math.max(maxOpacity, 0.75)
-            : maxOpacity;
-
-        // Дистанция за границей экрана, на которой осьминога не видно целиком
-        const tailLength =
-            (TENTACLE_ROOT_OFFSET + (tentacleSegments - 1) * tentacleSpacing) *
-            octopusSize;
-
-        const tipReach = cursorRadius * TENTACLE_TIP_SCALE * octopusSize;
-
-        const mantleReach = Math.max(
-            ...MANTLE_BLOBS.map(
-                (blob) =>
-                    (Math.abs(blob.offset) + cursorRadius * blob.scale) *
-                    octopusSize,
-            ),
-        );
-
-        const hideDistance =
-            Math.max(tailLength + tipReach, mantleReach) + 12 * octopusSize;
-
-        if (isMobile) {
-            mouseRef.current.x = -1000;
-            mouseRef.current.y = -1000;
-
-            targetMouseRef.current.x = -1000;
-            targetMouseRef.current.y = -1000;
-
-            clickRef.current = 0;
-            clickTargetRef.current = 0;
-        }
-
+        // Эти параметры пересчитываются один раз на перерисовку внутри `render`
+        // поэтому мы можем безопасно менять props без фризов
         let cols = 0;
         let rows = 0;
-
         let octopusField = new Float32Array(0);
 
-        const head = {
-            x: 0,
-            y: 0,
-        };
-
+        const head = { x: 0, y: 0 };
         const tentacles: { x: number; y: number }[][] = [];
         const blobs: { x: number; y: number; scale: number }[] = [];
 
         let octopusAngle = 0;
-        let octopusCurrentSpeed = baseSpeed;
+        let octopusCurrentSpeed = configRef.current.octopusSpeed * uiScale;
         let fan = TENTACLE_FAN_WIDE;
         let wavePhase = 0;
         let pulsePhase = 0;
         let mantleScale = 1;
         let tick = 0;
 
-        // Жизненный цикл осьминога
         let phase: OctopusPhase = "hidden";
         let hiddenUntil =
             performance.now() +
@@ -775,10 +622,8 @@ export default function DotGrid({
         let holdSeed = 0;
         let cruiseSpeed = OCTOPUS_TRANSIT_SPEED;
         let lastScenario: ScenarioName | null = null;
-
         let wasTouchingOctopus = false;
 
-        // Взрыв
         let explosionActive = false;
         let explosionStartAt = 0;
         let explosionEndAt = 0;
@@ -786,61 +631,44 @@ export default function DotGrid({
         let explosionCenterY = 0;
         let explosionMaxDistance = 1;
 
-        // Длина волны масштабируется вместе с осьминогом
-        const waveNumber = (Math.PI * 2) / (tentacleWaveLength * octopusSize);
-
         const getRestAngle = (index: number) => {
-            const step = fan / Math.max(1, tentacleCount - 1);
-
-            return (
-                octopusAngle +
-                Math.PI +
-                (index - (tentacleCount - 1) / 2) * step
-            );
+            const tc = configRef.current.tentacleCount;
+            const step = fan / Math.max(1, tc - 1);
+            return octopusAngle + Math.PI + (index - (tc - 1) / 2) * step;
         };
 
         const placeOctopus = (x: number, y: number, angle: number) => {
+            const cfg = configRef.current;
             head.x = x;
             head.y = y;
-
             octopusAngle = angle;
-            octopusCurrentSpeed = baseSpeed * OCTOPUS_TRANSIT_SPEED;
+            octopusCurrentSpeed =
+                cfg.octopusSpeed * uiScale * OCTOPUS_TRANSIT_SPEED;
             fan = TENTACLE_FAN_NARROW;
             wavePhase = Math.random() * Math.PI * 2;
             pulsePhase = Math.random() * Math.PI * 2;
             mantleScale = 1;
-
             tentacles.length = 0;
 
-            for (let k = 0; k < tentacleCount; k++) {
+            for (let k = 0; k < cfg.tentacleCount; k++) {
                 const restAngle = getRestAngle(k);
                 const spine: { x: number; y: number }[] = [];
-
-                for (let i = 0; i < tentacleSegments; i++) {
+                for (let i = 0; i < cfg.tentacleSegments; i++) {
                     const distance =
-                        (TENTACLE_ROOT_OFFSET + i * tentacleSpacing) *
-                        octopusSize;
-
+                        (TENTACLE_ROOT_OFFSET + i * cfg.tentacleSpacing) *
+                        uiScale;
                     spine.push({
                         x: head.x + Math.cos(restAngle) * distance,
                         y: head.y + Math.sin(restAngle) * distance,
                     });
                 }
-
                 tentacles.push(spine);
             }
 
             const blobCount =
-                MANTLE_BLOBS.length + tentacleCount * tentacleSegments;
-
-            while (blobs.length < blobCount) {
-                blobs.push({
-                    x: 0,
-                    y: 0,
-                    scale: 0,
-                });
-            }
-
+                MANTLE_BLOBS.length + cfg.tentacleCount * cfg.tentacleSegments;
+            while (blobs.length < blobCount)
+                blobs.push({ x: 0, y: 0, scale: 0 });
             blobs.length = blobCount;
         };
 
@@ -852,12 +680,10 @@ export default function DotGrid({
             rows = Math.floor(height / grid) + 1;
 
             const points: Point[] = [];
-
             for (let row = 0; row < rows; row++) {
                 for (let col = 0; col < cols; col++) {
                     const x = col * grid;
                     const y = row * grid;
-
                     points.push({
                         x,
                         y,
@@ -868,6 +694,9 @@ export default function DotGrid({
                         blastDirX: 0,
                         blastDirY: 0,
                         blastDistance: 0,
+                        drawX: x,
+                        drawY: y,
+                        drawR: 0,
                     });
                 }
             }
@@ -878,30 +707,40 @@ export default function DotGrid({
 
         const resize = () => {
             const dpr = window.devicePixelRatio || 1;
-
             canvas.width = window.innerWidth * dpr;
             canvas.height = window.innerHeight * dpr;
-
             canvas.style.width = `${window.innerWidth}px`;
             canvas.style.height = `${window.innerHeight}px`;
-
             ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-
             createPoints();
         };
 
-        /* ───────── Жизненный цикл ───────── */
-
+        // --- Octopus Handlers ---
         const startScenario = (timestamp: number) => {
+            const cfg = configRef.current;
             const w = window.innerWidth;
             const h = window.innerHeight;
-
             const side = Math.floor(Math.random() * 4);
             const t = rand(0.15, 0.85);
 
+            const tailLength =
+                (TENTACLE_ROOT_OFFSET +
+                    (cfg.tentacleSegments - 1) * cfg.tentacleSpacing) *
+                uiScale;
+            const tipReach = cfg.cursorRadius * TENTACLE_TIP_SCALE * uiScale;
+            const mantleReach = Math.max(
+                ...MANTLE_BLOBS.map(
+                    (blob) =>
+                        (Math.abs(blob.offset) +
+                            cfg.cursorRadius * blob.scale) *
+                        uiScale,
+                ),
+            );
+            const hideDistance =
+                Math.max(tailLength + tipReach, mantleReach) + 12 * uiScale;
+
             const spawn = borderPoint(side, t, hideDistance, w, h);
             const inward = SIDE_INWARD[side];
-
             placeOctopus(
                 spawn.x,
                 spawn.y,
@@ -909,15 +748,13 @@ export default function DotGrid({
             );
 
             const name = pickScenario(lastScenario);
-
             lastScenario = name;
-
             plan = buildScenario(name, {
                 w,
                 h,
                 side,
                 t,
-                size: octopusSize,
+                size: uiScale,
                 hideDistance,
             });
 
@@ -929,7 +766,6 @@ export default function DotGrid({
             holdSeed = Math.random() * 100;
             cruiseSpeed = OCTOPUS_TRANSIT_SPEED;
             wasTouchingOctopus = false;
-
             phase = "active";
         };
 
@@ -937,45 +773,54 @@ export default function DotGrid({
             phase = "hidden";
             hiddenUntil =
                 timestamp + rand(OCTOPUS_HIDDEN_MIN, OCTOPUS_HIDDEN_MAX);
-
             plan = [];
             escaping = false;
             wasTouchingOctopus = false;
-
             octopusField.fill(0);
         };
 
-        // Испугался курсора: единственная цель — уйти за ближайшую границу по ходу бегства
         const beginEscape = (awayX: number, awayY: number) => {
-            const length = Math.hypot(awayX, awayY) || 1;
-
+            const cfg = configRef.current;
+            const length = Math.sqrt(awayX * awayX + awayY * awayY) || 1;
             const dirX = awayX / length;
             const dirY = awayY / length;
 
-            const limit = hideDistance + OCTOPUS_EXIT_EXTRA * octopusSize;
+            const tailLength =
+                (TENTACLE_ROOT_OFFSET +
+                    (cfg.tentacleSegments - 1) * cfg.tentacleSpacing) *
+                uiScale;
+            const tipReach = cfg.cursorRadius * TENTACLE_TIP_SCALE * uiScale;
+            const mantleReach = Math.max(
+                ...MANTLE_BLOBS.map(
+                    (blob) =>
+                        (Math.abs(blob.offset) +
+                            cfg.cursorRadius * blob.scale) *
+                        uiScale,
+                ),
+            );
+            const hideDistance =
+                Math.max(tailLength + tipReach, mantleReach) + 12 * uiScale;
 
+            const limit = hideDistance + OCTOPUS_EXIT_EXTRA * uiScale;
             let distance = Infinity;
 
-            if (dirX > 0.001) {
+            if (dirX > 0.001)
                 distance = Math.min(
                     distance,
                     (window.innerWidth + limit - head.x) / dirX,
                 );
-            } else if (dirX < -0.001) {
+            else if (dirX < -0.001)
                 distance = Math.min(distance, (-limit - head.x) / dirX);
-            }
 
-            if (dirY > 0.001) {
+            if (dirY > 0.001)
                 distance = Math.min(
                     distance,
                     (window.innerHeight + limit - head.y) / dirY,
                 );
-            } else if (dirY < -0.001) {
+            else if (dirY < -0.001)
                 distance = Math.min(distance, (-limit - head.y) / dirY);
-            }
 
             distance = Math.max(0, distance);
-
             plan = [
                 go(
                     head.x + dirX * distance,
@@ -983,7 +828,6 @@ export default function DotGrid({
                     OCTOPUS_TRANSIT_SPEED,
                 ),
             ];
-
             stepIndex = 0;
             escaping = true;
         };
@@ -991,10 +835,9 @@ export default function DotGrid({
         const isOctopusVisible = () => {
             const width = window.innerWidth;
             const height = window.innerHeight;
-
             for (const blob of blobs) {
-                const radius = cursorRadius * blob.scale * octopusSize;
-
+                const radius =
+                    configRef.current.cursorRadius * blob.scale * uiScale;
                 if (
                     blob.x + radius > 0 &&
                     blob.x - radius < width &&
@@ -1004,11 +847,8 @@ export default function DotGrid({
                     return true;
                 }
             }
-
             return false;
         };
-
-        /* ───────── Движение осьминога ───────── */
 
         const updateOctopus = (
             timestamp: number,
@@ -1016,6 +856,8 @@ export default function DotGrid({
             mouseY: number,
             cursorSpeed: number,
         ) => {
+            const cfg = configRef.current;
+            const baseSpeed = cfg.octopusSpeed * uiScale;
             let nearestSquared =
                 (head.x - mouseX) ** 2 + (head.y - mouseY) ** 2;
 
@@ -1023,7 +865,6 @@ export default function DotGrid({
                 for (const segment of spine) {
                     const dx = segment.x - mouseX;
                     const dy = segment.y - mouseY;
-
                     nearestSquared = Math.min(
                         nearestSquared,
                         dx * dx + dy * dy,
@@ -1031,7 +872,7 @@ export default function DotGrid({
                 }
             }
 
-            const fleeing = nearestSquared < octopusFleeDistance ** 2;
+            const fleeing = nearestSquared < cfg.octopusFleeDistance ** 2;
             const maxTurn = fleeing ? 0.15 : 0.05;
 
             let desiredAngle = octopusAngle;
@@ -1040,31 +881,21 @@ export default function DotGrid({
             if (fleeing) {
                 const awayX = head.x - mouseX;
                 const awayY = head.y - mouseY;
-
-                if (!escaping) {
-                    beginEscape(awayX, awayY);
-                }
-
+                if (!escaping) beginEscape(awayX, awayY);
                 desiredAngle = Math.atan2(awayY, awayX);
-
                 targetSpeed = Math.max(
                     baseSpeed * OCTOPUS_TRANSIT_SPEED,
                     Math.min(cursorSpeed, OCTOPUS_MAX_SPEED),
                 );
             } else {
                 const step = plan[stepIndex];
-
                 if (step?.type === "go") {
                     const dx = step.x - head.x;
                     const dy = step.y - head.y;
-
-                    const distance = Math.hypot(dx, dy);
-
+                    const distance = Math.sqrt(dx * dx + dy * dy);
                     const turnRadius = octopusCurrentSpeed / maxTurn;
-
                     const reach =
-                        step.reach ??
-                        Math.max(70 * octopusSize, turnRadius * 1.1);
+                        step.reach ?? Math.max(70 * uiScale, turnRadius * 1.1);
 
                     cruiseSpeed = step.speed;
                     targetSpeed = baseSpeed * step.speed;
@@ -1077,21 +908,18 @@ export default function DotGrid({
                             (Math.sin(tick * 0.011) +
                                 Math.sin(tick * 0.0173 + 2)) *
                             OCTOPUS_WANDER;
-
                         desiredAngle = Math.atan2(dy, dx) + sway * step.wander;
                     }
                 } else if (step?.type === "hold") {
                     const dx = step.x - head.x;
                     const dy = step.y - head.y;
-
-                    const distance = Math.hypot(dx, dy);
-
+                    const distance = Math.sqrt(dx * dx + dy * dy);
                     targetSpeed = baseSpeed * OCTOPUS_HOLD_SPEED;
 
                     if (timestamp - stepStartedAt >= step.duration) {
                         stepIndex++;
                         stepStartedAt = timestamp;
-                    } else if (distance > OCTOPUS_HOLD_RADIUS * octopusSize) {
+                    } else if (distance > OCTOPUS_HOLD_RADIUS * uiScale) {
                         desiredAngle = Math.atan2(dy, dx);
                     } else {
                         desiredAngle =
@@ -1105,22 +933,19 @@ export default function DotGrid({
                 Math.sin(desiredAngle - octopusAngle),
                 Math.cos(desiredAngle - octopusAngle),
             );
-
             octopusAngle += clamp(diff, -maxTurn, maxTurn);
-
             octopusCurrentSpeed = lerp(octopusCurrentSpeed, targetSpeed, 0.2);
-
             pulsePhase += 0.05 + octopusCurrentSpeed * 0.02;
 
             const pulse = Math.sin(pulsePhase);
-
             const moveSpeed = octopusCurrentSpeed * (1 + JET_STRENGTH * pulse);
-
             mantleScale = 1 - MANTLE_SQUEEZE * pulse;
 
             head.x += Math.cos(octopusAngle) * moveSpeed;
             head.y += Math.sin(octopusAngle) * moveSpeed;
 
+            const waveNumber =
+                (Math.PI * 2) / (cfg.tentacleWaveLength * uiScale);
             wavePhase +=
                 octopusCurrentSpeed * waveNumber * TENTACLE_WAVE_SPEED_RATIO +
                 TENTACLE_WAVE_IDLE_SPEED;
@@ -1133,20 +958,16 @@ export default function DotGrid({
                     octopusCurrentSpeed / (TENTACLE_FAN_SPEED * uiScale),
                 ),
             );
-
             fan = lerp(fan, fanTarget, 0.05);
 
             for (let k = 0; k < tentacles.length; k++) {
                 const spine = tentacles[k];
-
                 const restAngle = getRestAngle(k);
                 const restX = Math.cos(restAngle);
                 const restY = Math.sin(restAngle);
 
-                spine[0].x =
-                    head.x + restX * TENTACLE_ROOT_OFFSET * octopusSize;
-                spine[0].y =
-                    head.y + restY * TENTACLE_ROOT_OFFSET * octopusSize;
+                spine[0].x = head.x + restX * TENTACLE_ROOT_OFFSET * uiScale;
+                spine[0].y = head.y + restY * TENTACLE_ROOT_OFFSET * uiScale;
 
                 for (let i = 1; i < spine.length; i++) {
                     const previous = spine[i - 1];
@@ -1154,41 +975,41 @@ export default function DotGrid({
 
                     segment.x +=
                         (previous.x +
-                            restX * tentacleSpacing * octopusSize -
+                            restX * cfg.tentacleSpacing * uiScale -
                             segment.x) *
                         TENTACLE_STIFFNESS;
-
                     segment.y +=
                         (previous.y +
-                            restY * tentacleSpacing * octopusSize -
+                            restY * cfg.tentacleSpacing * uiScale -
                             segment.y) *
                         TENTACLE_STIFFNESS;
 
                     const dx = segment.x - previous.x;
                     const dy = segment.y - previous.y;
-                    const length = Math.hypot(dx, dy) || 1;
+                    const length = Math.sqrt(dx * dx + dy * dy) || 1;
 
                     segment.x =
                         previous.x +
-                        (dx / length) * tentacleSpacing * octopusSize;
+                        (dx / length) * cfg.tentacleSpacing * uiScale;
                     segment.y =
                         previous.y +
-                        (dy / length) * tentacleSpacing * octopusSize;
+                        (dy / length) * cfg.tentacleSpacing * uiScale;
                 }
             }
         };
 
         const updateBlobs = () => {
+            const cfg = configRef.current;
+            const waveNumber =
+                (Math.PI * 2) / (cfg.tentacleWaveLength * uiScale);
             const forwardX = Math.cos(octopusAngle);
             const forwardY = Math.sin(octopusAngle);
-
             let blobIndex = 0;
 
             for (const mantle of MANTLE_BLOBS) {
                 const blob = blobs[blobIndex++];
-
-                blob.x = head.x + forwardX * mantle.offset * octopusSize;
-                blob.y = head.y + forwardY * mantle.offset * octopusSize;
+                blob.x = head.x + forwardX * mantle.offset * uiScale;
+                blob.y = head.y + forwardY * mantle.offset * uiScale;
                 blob.scale = mantle.scale * mantleScale;
             }
 
@@ -1202,29 +1023,27 @@ export default function DotGrid({
 
                     let tangentX = previous.x - next.x;
                     let tangentY = previous.y - next.y;
-
-                    const tangentLength = Math.hypot(tangentX, tangentY) || 1;
+                    const tangentLength =
+                        Math.sqrt(tangentX * tangentX + tangentY * tangentY) ||
+                        1;
 
                     tangentX /= tangentLength;
                     tangentY /= tangentLength;
 
                     const ramp = count > 1 ? i / (count - 1) : 0;
-
                     const offset =
-                        tentacleWaveAmplitude *
-                        octopusSize *
+                        cfg.tentacleWaveAmplitude *
+                        uiScale *
                         ramp *
                         Math.sin(
                             wavePhase -
-                                i * tentacleSpacing * octopusSize * waveNumber +
+                                i * cfg.tentacleSpacing * uiScale * waveNumber +
                                 k * TENTACLE_PHASE_STEP,
                         );
 
                     const blob = blobs[blobIndex++];
-
                     blob.x = spine[i].x - tangentY * offset;
                     blob.y = spine[i].y + tangentX * offset;
-
                     blob.scale = lerp(
                         TENTACLE_ROOT_SCALE,
                         TENTACLE_TIP_SCALE,
@@ -1235,40 +1054,33 @@ export default function DotGrid({
         };
 
         const accumulateOctopus = () => {
+            const cfg = configRef.current;
             octopusField.fill(0);
-
             const points = pointsRef.current;
 
             for (const blob of blobs) {
-                const blobRadius = cursorRadius * blob.scale * octopusSize;
-
-                if (blobRadius <= 0) {
-                    continue;
-                }
+                const blobRadius = cfg.cursorRadius * blob.scale * uiScale;
+                if (blobRadius <= 0) continue;
 
                 const blobRadiusSquared = blobRadius * blobRadius;
                 const blobFalloff = Math.max(
                     1,
-                    falloff * blob.scale * octopusSize,
+                    cfg.falloff * blob.scale * uiScale,
                 );
-
                 const twoFalloffSquared = 2 * blobFalloff * blobFalloff;
 
                 const colMin = Math.max(
                     0,
                     Math.ceil((blob.x - blobRadius) / grid),
                 );
-
                 const colMax = Math.min(
                     cols - 1,
                     Math.floor((blob.x + blobRadius) / grid),
                 );
-
                 const rowMin = Math.max(
                     0,
                     Math.ceil((blob.y - blobRadius) / grid),
                 );
-
                 const rowMax = Math.min(
                     rows - 1,
                     Math.floor((blob.y + blobRadius) / grid),
@@ -1278,36 +1090,24 @@ export default function DotGrid({
                     for (let col = colMin; col <= colMax; col++) {
                         const index = row * cols + col;
                         const point = points[index];
-
-                        if (!point) {
-                            continue;
-                        }
+                        if (!point) continue;
 
                         const dx = point.x - blob.x;
                         const dy = point.y - blob.y;
-
                         const distanceSquared = dx * dx + dy * dy;
 
-                        if (distanceSquared >= blobRadiusSquared) {
-                            continue;
-                        }
+                        if (distanceSquared >= blobRadiusSquared) continue;
 
                         const distance = Math.sqrt(distanceSquared);
-
-                        if (distance < 0.001) {
-                            continue;
-                        }
+                        if (distance < 0.001) continue;
 
                         const weight = Math.exp(
                             -distanceSquared / twoFalloffSquared,
                         );
-
                         const offset = index * 4;
 
                         octopusField[offset] += (dx / distance) * weight;
-
                         octopusField[offset + 1] += (dy / distance) * weight;
-
                         octopusField[offset + 2] += weight;
 
                         if (weight > octopusField[offset + 3]) {
@@ -1319,36 +1119,22 @@ export default function DotGrid({
         };
 
         const isTouchingOctopus = (x: number, y: number) => {
-            const headDX = head.x - x;
-            const headDY = head.y - y;
-
-            const catchRadius = OCTOPUS_CATCH_RADIUS * octopusSize;
-
-            if (
-                headDX * headDX + headDY * headDY <=
-                catchRadius * catchRadius
-            ) {
+            const cfg = configRef.current;
+            const catchRadius = OCTOPUS_CATCH_RADIUS * uiScale;
+            if ((head.x - x) ** 2 + (head.y - y) ** 2 <= catchRadius ** 2)
                 return true;
-            }
 
             for (const blob of blobs) {
                 const dx = blob.x - x;
                 const dy = blob.y - y;
-
                 const hitRadius = Math.max(
                     catchRadius * 0.65,
-                    cursorRadius * blob.scale * octopusSize * 0.3,
+                    cfg.cursorRadius * blob.scale * uiScale * 0.3,
                 );
-
-                if (dx * dx + dy * dy <= hitRadius * hitRadius) {
-                    return true;
-                }
+                if (dx * dx + dy * dy <= hitRadius * hitRadius) return true;
             }
-
             return false;
         };
-
-        /* ───────── Взрыв ───────── */
 
         const explodeOctopus = (
             timestamp: number,
@@ -1358,25 +1144,24 @@ export default function DotGrid({
         ) => {
             const centerX = head.x;
             const centerY = head.y;
-
             const width = window.innerWidth;
             const height = window.innerHeight;
 
             const maxDistance = Math.max(
                 1,
-                Math.hypot(centerX, centerY),
-                Math.hypot(width - centerX, centerY),
-                Math.hypot(centerX, height - centerY),
-                Math.hypot(width - centerX, height - centerY),
+                Math.sqrt(centerX ** 2 + centerY ** 2),
+                Math.sqrt((width - centerX) ** 2 + centerY ** 2),
+                Math.sqrt(centerX ** 2 + (height - centerY) ** 2),
+                Math.sqrt((width - centerX) ** 2 + (height - centerY) ** 2),
             );
 
-            const cursorDirectionLength = Math.hypot(cursorDX, cursorDY);
-
+            const cursorDirectionLength = Math.sqrt(
+                cursorDX * cursorDX + cursorDY * cursorDY,
+            );
             const cursorDirectionX =
                 cursorDirectionLength > 0.001
                     ? cursorDX / cursorDirectionLength
                     : 0;
-
             const cursorDirectionY =
                 cursorDirectionLength > 0.001
                     ? cursorDY / cursorDirectionLength
@@ -1384,31 +1169,27 @@ export default function DotGrid({
 
             const cursorMotion = clamp(cursorSpeed / OCTOPUS_MAX_SPEED, 0, 1);
             const cursorBoost = 1 + cursorMotion * EXPLOSION_CURSOR_BOOST;
-
             const points = pointsRef.current;
 
             for (let index = 0; index < points.length; index++) {
                 const point = points[index];
-
                 const dx = point.x - centerX;
                 const dy = point.y - centerY;
-
-                const distance = Math.hypot(dx, dy);
+                const distance = Math.sqrt(dx * dx + dy * dy);
                 const normalized = clamp(distance / maxDistance, 0, 1);
 
                 let dirX =
                     distance > 0.001 ? dx / distance : Math.cos(octopusAngle);
-
                 let dirY =
                     distance > 0.001 ? dy / distance : Math.sin(octopusAngle);
 
-                // Точки у тела осьминога вылетают от его формы, а не только от центра
                 const fieldOffset = index * 4;
-
                 const shapeX = octopusField[fieldOffset];
                 const shapeY = octopusField[fieldOffset + 1];
                 const shapeInfluence = octopusField[fieldOffset + 3];
-                const shapeLength = Math.hypot(shapeX, shapeY);
+                const shapeLength = Math.sqrt(
+                    shapeX * shapeX + shapeY * shapeY,
+                );
 
                 if (shapeLength > 0.001 && shapeInfluence > 0) {
                     const shapeBlend = clamp(
@@ -1416,7 +1197,6 @@ export default function DotGrid({
                         0,
                         EXPLOSION_SHAPE_DIRECTION,
                     );
-
                     dirX = lerp(dirX, shapeX / shapeLength, shapeBlend);
                     dirY = lerp(dirY, shapeY / shapeLength, shapeBlend);
                 }
@@ -1427,7 +1207,6 @@ export default function DotGrid({
                         cursorDirectionX,
                         cursorMotion * EXPLOSION_CURSOR_DIRECTION,
                     );
-
                     dirY = lerp(
                         dirY,
                         cursorDirectionY,
@@ -1438,12 +1217,10 @@ export default function DotGrid({
                 const jitter = (Math.random() - 0.5) * EXPLOSION_ANGLE_JITTER;
                 const cos = Math.cos(jitter);
                 const sin = Math.sin(jitter);
-
                 const rotatedX = dirX * cos - dirY * sin;
                 const rotatedY = dirX * sin + dirY * cos;
-
-                const rotatedLength = Math.hypot(rotatedX, rotatedY) || 1;
-
+                const rotatedLength =
+                    Math.sqrt(rotatedX * rotatedX + rotatedY * rotatedY) || 1;
                 const falloffByDistance = Math.exp(
                     -distance / (EXPLOSION_FLY_DECAY * uiScale),
                 );
@@ -1455,16 +1232,13 @@ export default function DotGrid({
                     uiScale *
                     cursorBoost *
                     (0.75 + Math.random() * 0.5);
-
                 point.blastDirX = rotatedX / rotatedLength;
                 point.blastDirY = rotatedY / rotatedLength;
-
                 point.blastHitAt =
                     timestamp +
                     EXPLOSION_WAVE_DURATION *
                         Math.pow(normalized, EXPLOSION_WAVE_CURVE) +
                     Math.random() * 40;
-
                 point.blastRebornAt =
                     timestamp +
                     EXPLOSION_REGROW_START +
@@ -1473,7 +1247,6 @@ export default function DotGrid({
             }
 
             octopusField.fill(0);
-
             explosionActive = true;
             explosionStartAt = timestamp;
             explosionCenterX = centerX;
@@ -1487,28 +1260,20 @@ export default function DotGrid({
                 EXPLOSION_REGROW_JITTER +
                 EXPLOSION_GROW_DURATION +
                 120;
-
-            // Осьминог вернётся только когда сетка полностью отрастёт
             phase = "hidden";
             hiddenUntil = explosionEndAt + EXPLOSION_RETURN_DELAY;
-
             plan = [];
             escaping = false;
             wasTouchingOctopus = false;
         };
 
-        // Вспышка в эпицентре и светящееся кольцо ударной волны
         const drawShockwave = (timestamp: number) => {
             const elapsed = timestamp - explosionStartAt;
-
-            if (elapsed < 0) {
-                return;
-            }
+            if (elapsed < 0) return;
 
             if (elapsed < EXPLOSION_FLASH_DURATION) {
                 const k = 1 - elapsed / EXPLOSION_FLASH_DURATION;
                 const flashRadius = (120 + 220 * (1 - k)) * uiScale;
-
                 const gradient = ctx.createRadialGradient(
                     explosionCenterX,
                     explosionCenterY,
@@ -1517,10 +1282,11 @@ export default function DotGrid({
                     explosionCenterY,
                     flashRadius,
                 );
-
-                gradient.addColorStop(0, `rgba(${color}, ${0.4 * k * k})`);
-                gradient.addColorStop(1, `rgba(${color}, 0)`);
-
+                gradient.addColorStop(
+                    0,
+                    `rgba(${configRef.current.color}, ${0.4 * k * k})`,
+                );
+                gradient.addColorStop(1, `rgba(${configRef.current.color}, 0)`);
                 ctx.fillStyle = gradient;
                 ctx.beginPath();
                 ctx.arc(
@@ -1535,11 +1301,9 @@ export default function DotGrid({
 
             if (elapsed < EXPLOSION_WAVE_DURATION) {
                 const n = elapsed / EXPLOSION_WAVE_DURATION;
-
                 const radius =
                     explosionMaxDistance *
                     Math.pow(n, 1 / EXPLOSION_WAVE_CURVE);
-
                 const width = (60 + 90 * n) * uiScale;
                 const inner = Math.max(0, radius - width);
                 const outer = radius + width * 0.15;
@@ -1553,13 +1317,19 @@ export default function DotGrid({
                         explosionCenterY,
                         outer,
                     );
-
                     const alpha = 0.22 * Math.pow(1 - n, 1.5);
-
-                    gradient.addColorStop(0, `rgba(${color}, 0)`);
-                    gradient.addColorStop(0.85, `rgba(${color}, ${alpha})`);
-                    gradient.addColorStop(1, `rgba(${color}, 0)`);
-
+                    gradient.addColorStop(
+                        0,
+                        `rgba(${configRef.current.color}, 0)`,
+                    );
+                    gradient.addColorStop(
+                        0.85,
+                        `rgba(${configRef.current.color}, ${alpha})`,
+                    );
+                    gradient.addColorStop(
+                        1,
+                        `rgba(${configRef.current.color}, 0)`,
+                    );
                     ctx.fillStyle = gradient;
                     ctx.beginPath();
                     ctx.arc(
@@ -1574,23 +1344,15 @@ export default function DotGrid({
             }
         };
 
-        /* ───────── Курсор ───────── */
-
         const updateCursorMode = (element: Element | null) => {
-            if (isMobile) {
-                return;
-            }
-
+            if (isMobile) return;
             const cursorElement =
                 element?.closest<HTMLElement>("[data-cursor]");
-
             const modeValue = cursorElement?.dataset.cursor ?? "default";
-
             const mode = CURSOR_MODES[modeValue] ? modeValue : "default";
 
             const colorValue = cursorElement?.dataset.color;
             const shadowValue = cursorElement?.dataset.shadow;
-
             const nextColor = resolveCursorColor(colorValue);
 
             if (cursorColorRef.current !== nextColor) {
@@ -1599,7 +1361,6 @@ export default function DotGrid({
             }
 
             const nextShadow = shadowValue ?? DEFAULT_SHADOW;
-
             if (shadowRef.current !== nextShadow) {
                 shadowRef.current = nextShadow;
                 setShadow(nextShadow);
@@ -1607,60 +1368,33 @@ export default function DotGrid({
 
             if (cursorModeRef.current.target !== mode) {
                 cursorModeRef.current.target = mode;
-
                 setCursorMode(CURSOR_MODES[mode] ?? DEFAULT_CURSOR_MODE);
             }
         };
 
         const handlePointerMove = (event: PointerEvent) => {
-            if (isMobile) {
-                return;
-            }
-
+            if (isMobile) return;
             targetMouseRef.current.x = event.clientX;
             targetMouseRef.current.y = event.clientY;
-
-            const element = document.elementFromPoint(
-                event.clientX,
-                event.clientY,
-            );
-
-            updateCursorMode(element);
+            updateCursorMode(event.target as Element | null);
         };
 
         const handlePointerDown = (event: PointerEvent) => {
-            if (isMobile) {
-                return;
-            }
-
+            if (isMobile) return;
             clickTargetRef.current = 1;
-
-            const element = document.elementFromPoint(
-                event.clientX,
-                event.clientY,
-            );
-
-            updateCursorMode(element);
+            updateCursorMode(event.target as Element | null);
         };
 
         const handlePointerUp = () => {
-            if (isMobile) {
-                return;
-            }
-
+            if (isMobile) return;
             clickTargetRef.current = 0;
         };
 
         const handlePointerLeave = () => {
-            if (isMobile) {
-                return;
-            }
-
+            if (isMobile) return;
             targetMouseRef.current.x = -1000;
             targetMouseRef.current.y = -1000;
-
             clickTargetRef.current = 0;
-
             cursorModeRef.current.target = "default";
             cursorColorRef.current = DEFAULT_CURSOR_COLOR;
             shadowRef.current = DEFAULT_SHADOW;
@@ -1670,66 +1404,66 @@ export default function DotGrid({
             setShadow(DEFAULT_SHADOW);
         };
 
-        /* ───────── Кадр ───────── */
+        // --- Батчинг Отрисовки Оптимизация ---
+        const OPACITY_STEPS = 20;
+        const opacityBuckets: Point[][] = Array.from(
+            { length: OPACITY_STEPS + 1 },
+            () => [],
+        );
+        let colorCacheStr = "";
+        let colorCache: string[] = [];
 
         const render = (timestamp: number) => {
+            const cfg = configRef.current;
             const width = window.innerWidth;
             const height = window.innerHeight;
-
             const mouse = mouseRef.current;
             const target = targetMouseRef.current;
 
             const previousMouseX = mouse.x;
             const previousMouseY = mouse.y;
 
-            mouse.x += (target.x - mouse.x) * smoothness;
-            mouse.y += (target.y - mouse.y) * smoothness;
+            mouse.x += (target.x - mouse.x) * cfg.smoothness;
+            mouse.y += (target.y - mouse.y) * cfg.smoothness;
 
             const cursorDX = mouse.x - previousMouseX;
             const cursorDY = mouse.y - previousMouseY;
-
-            const cursorSpeed = isMobile ? 0 : Math.hypot(cursorDX, cursorDY);
+            const cursorSpeed = isMobile
+                ? 0
+                : Math.sqrt(cursorDX * cursorDX + cursorDY * cursorDY);
 
             const cursorX = isMobile ? -10000 : mouse.x;
             const cursorY = isMobile ? -10000 : mouse.y;
 
             clickRef.current +=
                 (clickTargetRef.current - clickRef.current) * 0.2;
-
             const click = isMobile ? 0 : clickRef.current;
-
             const targetMode =
                 CURSOR_MODES[cursorModeRef.current.target] ??
                 DEFAULT_CURSOR_MODE;
-
             const animation = cursorAnimationRef.current;
 
             animation.scale = lerp(animation.scale, targetMode.scale, 0.12);
-
             animation.opacity = lerp(
                 animation.opacity,
                 targetMode.opacity,
                 0.12,
             );
-
             animation.borderScale = lerp(
                 animation.borderScale,
                 targetMode.borderScale,
                 0.12,
             );
-
             animation.circleOpacity = lerp(
                 animation.circleOpacity,
                 targetMode.circleOpacity ?? 1,
                 0.12,
             );
-
             animation.circleScale = lerp(
                 animation.circleScale,
                 targetMode.circleScale ?? 1,
                 0.12,
             );
-
             animation.distortion = lerp(
                 animation.distortion,
                 targetMode.distortion,
@@ -1738,18 +1472,17 @@ export default function DotGrid({
 
             if (explosionActive && timestamp >= explosionEndAt) {
                 explosionActive = false;
-
-                for (const point of pointsRef.current) {
-                    point.blastHitAt = 0;
-                }
+                for (const point of pointsRef.current) point.blastHitAt = 0;
             }
 
             tick++;
 
-            if (phase === "hidden") {
-                if (!explosionActive && timestamp >= hiddenUntil) {
-                    startScenario(timestamp);
-                }
+            if (
+                phase === "hidden" &&
+                !explosionActive &&
+                timestamp >= hiddenUntil
+            ) {
+                startScenario(timestamp);
             }
 
             if (phase === "active") {
@@ -1768,10 +1501,8 @@ export default function DotGrid({
 
             if (phase === "active") {
                 accumulateOctopus();
-
                 if (!isMobile) {
                     const touching = isTouchingOctopus(mouse.x, mouse.y);
-
                     if (touching && !wasTouchingOctopus) {
                         if (Math.random() < OCTOPUS_CATCH_CHANCE) {
                             explodeOctopus(
@@ -1793,101 +1524,104 @@ export default function DotGrid({
             }
 
             ctx.clearRect(0, 0, width, height);
-
-            if (explosionActive) {
-                drawShockwave(timestamp);
-            }
+            if (explosionActive) drawShockwave(timestamp);
 
             if (!isMobile && cursorRef.current) {
                 const scale = animation.scale * (1 - click * 0.5);
-
-                cursorRef.current.style.transform = `translate3d(
-                    ${mouse.x - cursorDotSize / 2}px,
-                    ${mouse.y - cursorDotSize / 2}px,
-                    0
-                ) scale(${scale})`;
-
+                cursorRef.current.style.transform = `translate3d(${mouse.x - cfg.cursorDotSize / 2}px, ${mouse.y - cfg.cursorDotSize / 2}px, 0) scale(${scale})`;
                 cursorRef.current.style.opacity = `${animation.opacity}`;
             }
 
             if (!isMobile && circleRef.current) {
-                circleRef.current.style.transform = `translate3d(
-                    ${mouse.x - cursorRadius}px,
-                    ${mouse.y - cursorRadius}px,
-                    0
-                ) scale(${animation.borderScale})`;
-
-                circleRef.current.style.opacity = `${circleOpacity}`;
-
+                circleRef.current.style.transform = `translate3d(${mouse.x - cfg.cursorRadius}px, ${mouse.y - cfg.cursorRadius}px, 0) scale(${animation.borderScale})`;
+                circleRef.current.style.opacity = `${cfg.circleOpacity}`;
                 circleRef.current.style.setProperty(
                     "--cursor-circle-opacity",
                     `${animation.circleOpacity}`,
                 );
-
                 circleRef.current.style.setProperty(
                     "--cursor-circle-scale",
                     `${animation.circleScale}`,
                 );
             }
 
-            const radiusSquared = cursorRadius * cursorRadius;
-            const falloffSquared = falloff * falloff;
             const points = pointsRef.current;
-
             const prePush = EXPLOSION_PRE_PUSH * uiScale;
+
+            // Закешированные статические вычисления для кадров
+            const distortionPx = cfg.distortion * uiScale;
+            const dotBase = cfg.baseRadius * uiScale;
+            const dotMax = cfg.maxRadius * uiScale;
+            const pointBaseOpacity = isMobile
+                ? Math.max(cfg.baseOpacity, 0.45)
+                : cfg.baseOpacity;
+            const pointMaxOpacity = isMobile
+                ? Math.max(cfg.maxOpacity, 0.75)
+                : cfg.maxOpacity;
+            const radiusSquared = cfg.cursorRadius * cfg.cursorRadius;
+            const falloffSquared = cfg.falloff * cfg.falloff;
+            const maxFalloffDistSq = falloffSquared * 16;
+
+            if (colorCacheStr !== cfg.color) {
+                colorCacheStr = cfg.color;
+                colorCache = Array.from(
+                    { length: OPACITY_STEPS + 1 },
+                    (_, i) => `rgba(${cfg.color}, ${i / OPACITY_STEPS})`,
+                );
+            }
+
+            for (let i = 0; i <= OPACITY_STEPS; i++)
+                opacityBuckets[i].length = 0;
 
             for (let index = 0; index < points.length; index++) {
                 const point = points[index];
-
                 const dx = point.x - cursorX;
                 const dy = point.y - cursorY;
-
                 const distanceSquared = dx * dx + dy * dy;
 
-                let influence = 0;
+                let targetX = point.x;
+                let targetY = point.y;
 
-                if (!isMobile && distanceSquared < radiusSquared) {
-                    influence = Math.exp(
+                let globalFalloff = 0;
+                if (!isMobile && distanceSquared < maxFalloffDistSq) {
+                    globalFalloff = Math.exp(
                         -distanceSquared / (2 * falloffSquared),
                     );
                 }
 
+                const influence =
+                    !isMobile && distanceSquared < radiusSquared
+                        ? globalFalloff
+                        : 0;
                 const distance = Math.sqrt(distanceSquared);
 
-                let directionX = 0;
-                let directionY = 0;
-
                 if (distance > 0.001) {
-                    directionX = dx / distance;
-                    directionY = dy / distance;
-                }
+                    const dirX = dx / distance;
+                    const dirY = dy / distance;
+                    let displacement = 0;
 
-                const displacement = distortionPx * influence;
+                    if (influence > 0) {
+                        displacement += distortionPx * influence;
+                    }
 
-                let targetX = point.x + directionX * displacement;
-                let targetY = point.y + directionY * displacement;
+                    if (
+                        !isMobile &&
+                        (click > 0 || animation.distortion > 0) &&
+                        globalFalloff > 0
+                    ) {
+                        let compression = 0;
+                        if (click > 0)
+                            compression += distortionPx * globalFalloff * click;
+                        if (animation.distortion > 0)
+                            compression +=
+                                distortionPx *
+                                animation.distortion *
+                                globalFalloff;
+                        displacement -= compression;
+                    }
 
-                if (!isMobile && click > 0 && distance > 0.001) {
-                    const clickFalloff = Math.exp(
-                        -distanceSquared / (2 * falloffSquared),
-                    );
-
-                    const compression = distortionPx * clickFalloff * click;
-
-                    targetX -= directionX * compression;
-                    targetY -= directionY * compression;
-                }
-
-                if (!isMobile && animation.distortion > 0 && distance > 0.001) {
-                    const cursorFalloff = Math.exp(
-                        -distanceSquared / (2 * falloffSquared),
-                    );
-
-                    const compression =
-                        distortionPx * animation.distortion * cursorFalloff;
-
-                    targetX -= directionX * compression;
-                    targetY -= directionY * compression;
+                    targetX += dirX * displacement;
+                    targetY += dirY * displacement;
                 }
 
                 const fieldOffset = index * 4;
@@ -1895,25 +1629,21 @@ export default function DotGrid({
 
                 if (octopusInfluence > 0) {
                     const fieldWeight = octopusField[fieldOffset + 2];
-
                     const octopusDisplacement =
                         (distortionPx * octopusInfluence) /
                         Math.max(0.0001, fieldWeight);
-
                     targetX += octopusField[fieldOffset] * octopusDisplacement;
-
                     targetY +=
                         octopusField[fieldOffset + 1] * octopusDisplacement;
                 }
 
-                point.currentX += (targetX - point.currentX) * jellySmoothness;
-
-                point.currentY += (targetY - point.currentY) * jellySmoothness;
+                point.currentX +=
+                    (targetX - point.currentX) * cfg.jellySmoothness;
+                point.currentY +=
+                    (targetY - point.currentY) * cfg.jellySmoothness;
 
                 const totalInfluence = Math.max(influence, octopusInfluence);
-
                 let pointRadius = dotBase + (dotMax - dotBase) * totalInfluence;
-
                 let opacity =
                     pointBaseOpacity +
                     (pointMaxOpacity - pointBaseOpacity) * totalInfluence;
@@ -1923,81 +1653,63 @@ export default function DotGrid({
 
                 if (point.blastHitAt > 0) {
                     const age = timestamp - point.blastHitAt;
-
                     if (age >= -EXPLOSION_LEAD) {
                         if (age < 0) {
-                            // Фронт близко: точка вспыхивает и чуть сдвигается
                             const s = 1 + age / EXPLOSION_LEAD;
                             const glow = s * s * (3 - 2 * s);
-
                             pointRadius = lerp(
                                 pointRadius,
                                 dotMax * EXPLOSION_FLASH_SIZE,
                                 glow,
                             );
-
                             opacity = lerp(
                                 opacity,
                                 EXPLOSION_FLASH_OPACITY,
                                 glow,
                             );
-
                             drawX += point.blastDirX * prePush * glow;
                             drawY += point.blastDirY * prePush * glow;
                         } else if (age < EXPLOSION_FLY_DURATION) {
-                            // Старая точка летит наружу и гаснет
                             const p = age / EXPLOSION_FLY_DURATION;
                             const eased = 1 - Math.pow(1 - p, 3);
-
                             const travel =
                                 prePush +
                                 Math.max(0, point.blastDistance - prePush) *
                                     eased;
-
                             const glow = Math.exp(-p * 5);
-
                             pointRadius =
                                 (dotBase +
                                     (dotMax * EXPLOSION_FLASH_SIZE - dotBase) *
                                         glow) *
                                 (1 - 0.55 * p);
-
                             opacity =
                                 (pointBaseOpacity +
                                     (EXPLOSION_FLASH_OPACITY -
                                         pointBaseOpacity) *
                                         glow) *
                                 (1 - p * p);
-
                             drawX += point.blastDirX * travel;
                             drawY += point.blastDirY * travel;
                         } else if (timestamp < point.blastRebornAt) {
-                            // Пусто: ждём вторую волну
                             continue;
                         } else {
                             const growth =
                                 (timestamp - point.blastRebornAt) /
                                 EXPLOSION_GROW_DURATION;
-
                             if (growth >= 1) {
                                 point.blastHitAt = 0;
                             } else {
-                                // Новая точка медленно проявляется
                                 const s = growth * growth * (3 - 2 * growth);
                                 const bloom =
                                     Math.sin(Math.PI * growth) * (1 - growth);
-
                                 pointRadius =
                                     pointRadius * s * (1 + 0.5 * bloom);
-
                                 opacity = Math.min(
                                     1,
                                     opacity * s + 0.6 * bloom,
                                 );
-
                                 const drift =
                                     EXPLOSION_REGROW_DRIFT * uiScale * (1 - s);
-
                                 drawX -= point.blastDirX * drift;
                                 drawY -= point.blastDirY * drift;
                             }
@@ -2005,11 +1717,30 @@ export default function DotGrid({
                     }
                 }
 
+                point.drawX = drawX;
+                point.drawY = drawY;
+                point.drawR = Math.max(0, pointRadius);
+
+                if (opacity > 0) {
+                    const bucketIdx = Math.min(
+                        OPACITY_STEPS,
+                        Math.max(0, Math.round(opacity * OPACITY_STEPS)),
+                    );
+                    opacityBuckets[bucketIdx].push(point);
+                }
+            }
+
+            for (let i = 0; i <= OPACITY_STEPS; i++) {
+                const bucket = opacityBuckets[i];
+                if (bucket.length === 0) continue;
+
+                ctx.fillStyle = colorCache[i];
                 ctx.beginPath();
-
-                ctx.arc(drawX, drawY, Math.max(0, pointRadius), 0, Math.PI * 2);
-
-                ctx.fillStyle = `rgba(${color}, ${opacity})`;
+                for (let j = 0; j < bucket.length; j++) {
+                    const p = bucket[j];
+                    ctx.moveTo(p.drawX + p.drawR, p.drawY);
+                    ctx.arc(p.drawX, p.drawY, p.drawR, 0, Math.PI * 2);
+                }
                 ctx.fill();
             }
 
@@ -2032,45 +1763,19 @@ export default function DotGrid({
 
         return () => {
             cancelAnimationFrame(animationRef.current);
-
             window.removeEventListener("resize", resize);
-
             window.removeEventListener("pointermove", handlePointerMove);
             window.removeEventListener("pointerdown", handlePointerDown);
             window.removeEventListener("pointerup", handlePointerUp);
             window.removeEventListener("pointerleave", handlePointerLeave);
         };
-    }, [
-        isMobile,
-        mobileScale,
-        gridSize,
-        cursorRadius,
-        falloff,
-        baseRadius,
-        maxRadius,
-        baseOpacity,
-        maxOpacity,
-        distortion,
-        smoothness,
-        jellySmoothness,
-        color,
-        cursorDotSize,
-        circleOpacity,
-        octopusSpeed,
-        octopusFleeDistance,
-        tentacleCount,
-        tentacleSegments,
-        tentacleSpacing,
-        tentacleWaveAmplitude,
-        tentacleWaveLength,
-    ]);
+    }, [isMobile, mobileScale, gridSize]);
 
     useEffect(() => {
         document.body.classList.toggle(
             "custom-cursor-active",
             isReady && !isMobile,
         );
-
         return () => {
             document.body.classList.remove("custom-cursor-active");
         };
@@ -2141,19 +1846,10 @@ export default function DotGrid({
                     <div
                         ref={circleRef}
                         className="
-                            before:content-['']
-                            before:absolute
-                            before:left-1/2
-                            before:top-1/2
-                            before:w-[33%]
-                            before:h-[33%]
-                            before:-translate-x-1/2
-                            before:-translate-y-1/2
-                            before:rounded-full
-                            before:border
-                            before:border-[var(--cursor-color)]
-                            before:opacity-[var(--cursor-circle-opacity)]
-                            before:scale-[var(--cursor-circle-scale)]
+                            before:content-[''] before:absolute before:left-1/2 before:top-1/2 
+                            before:w-[33%] before:h-[33%] before:-translate-x-1/2 before:-translate-y-1/2 
+                            before:rounded-full before:border before:border-[var(--cursor-color)] 
+                            before:opacity-[var(--cursor-circle-opacity)] before:scale-[var(--cursor-circle-scale)] 
                             before:origin-center
                         "
                         style={circleStyle}
@@ -2167,16 +1863,7 @@ export default function DotGrid({
                         {cursorMode.icon && (
                             <>
                                 <span style={glowStyle} />
-
-                                <span
-                                    className="
-                                        absolute
-                                        flex
-                                        items-center
-                                        justify-center
-                                        text-current
-                                    "
-                                >
+                                <span className="absolute flex items-center justify-center text-current">
                                     {cursorMode.icon}
                                 </span>
                             </>

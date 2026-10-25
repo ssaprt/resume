@@ -123,7 +123,7 @@ const MenuBlock = ({
     return (
         <motion.div
             data-cursor="button"
-            data-color="foreground"
+            data-color="curr"
             className={`
                 flex
                 justify-center
@@ -145,7 +145,7 @@ const MenuBlock = ({
                 className="
                     min-h-0
                     rounded-full
-                    bg-fg/15
+                    bg-curr/25
                     relative
                     overflow-hidden
                 "
@@ -158,7 +158,7 @@ const MenuBlock = ({
                         transition-colors
                         duration-600
                         ease-in-out
-                        ${active ? "bg-curr/30" : "bg-fg/30"}
+                        ${active ? "bg-curr/30" : "bg-curr/45"}
                     `}
                     style={{
                         transform: `translateY(${translateY}%) scaleY(${scaleY})`,
