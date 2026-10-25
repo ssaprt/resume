@@ -1553,7 +1553,7 @@ export default function DotGrid({
             const dotBase = cfg.baseRadius * uiScale;
             const dotMax = cfg.maxRadius * uiScale;
             const pointBaseOpacity = isMobile
-                ? Math.max(cfg.baseOpacity, 0.45)
+                ? Math.max(cfg.baseOpacity, 0.25)
                 : cfg.baseOpacity;
             const pointMaxOpacity = isMobile
                 ? Math.max(cfg.maxOpacity, 0.75)

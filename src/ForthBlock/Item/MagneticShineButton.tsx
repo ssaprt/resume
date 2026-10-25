@@ -45,6 +45,7 @@ export const MagneticShineButton = ({
                     rounded-[24px] 
                     border border-curr/30 
                     text-curr
+                    backdrop-blur-[2px]
                     mt-4
                 "
             >

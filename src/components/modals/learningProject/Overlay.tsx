@@ -49,6 +49,7 @@ export const Overlay = ({
                         exit={{ opacity: 0, y: 30 }}
                         transition={{ duration: 0.3 }}
                         className="
+                            relative 
                             w-[min(100vw,600px)]
                             shrink-0
                             h-[95dvh]
@@ -62,7 +63,22 @@ export const Overlay = ({
                             bg-app/50
                             "
                     >
+                        <motion.div
+                            initial={{ opacity: 1 }}
+                            animate={{ opacity: 0 }}
+                            exit={{
+                                opacity: 0,
+                                transition: { duration: 0, delay: 0 },
+                            }}
+                            transition={{
+                                duration: 1,
+                                delay: 0.3,
+                            }}
+                            className="absolute inset-0 z-50 pointer-events-none bg-app"
+                        />
+
                         <div className="absolute w-full h-0 z-54 pointer-events-none shadow-[0_0_40px_40px] shadow-app" />
+
                         {children}
                     </motion.div>
                 </div>

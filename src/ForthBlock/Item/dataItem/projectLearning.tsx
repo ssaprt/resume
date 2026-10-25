@@ -133,7 +133,10 @@ const edgesTwoPeters: Edge[] = [
     {
         from: "level-1-d",
         to: "level-2-c",
-        type: "straight",
+        type: "rounded",
+        radius: 16,
+        fromSide: "left",
+        toSide: "top",
         offset: 6,
         width: 1,
         dash: "2,2",
@@ -527,7 +530,7 @@ export const edgesRadioDock: Edge[] = [
         type: "straight",
         offset: 6,
         width: 1,
-        dash: "0,0",
+        dash: "2,2",
     },
     {
         from: "level-1-a",
@@ -543,7 +546,10 @@ export const edgesRadioDock: Edge[] = [
     {
         from: "level-2-a",
         to: "level-3-a",
-        type: "straight",
+        type: "rounded",
+        fromSide: "left",
+        toSide: "top",
+        radius: 16,
         offset: 6,
         width: 1,
         dash: "0,0",
@@ -551,7 +557,10 @@ export const edgesRadioDock: Edge[] = [
     {
         from: "level-2-a",
         to: "level-3-b",
-        type: "straight",
+        type: "rounded",
+        fromSide: "right",
+        toSide: "top",
+        radius: 16,
         offset: 6,
         width: 1,
         dash: "2,2",
@@ -570,10 +579,13 @@ export const edgesGmoon: Edge[] = [
     {
         from: "root-a",
         to: "level-1-a",
-        type: "straight",
+        type: "rounded",
+        fromSide: "bottom",
+        toSide: "right",
+        radius: 16,
         offset: 6,
         width: 1,
-        dash: "0,0",
+        dash: "2,2",
     },
     {
         from: "level-1-a",
@@ -619,10 +631,13 @@ export const edgesCrm: Edge[] = [
     {
         from: "root-a",
         to: "level-1-a",
-        type: "straight",
+        type: "rounded",
+        fromSide: "bottom",
+        toSide: "right",
+        radius: 16,
         offset: 6,
         width: 1,
-        dash: "0,0",
+        dash: "2,2",
     },
     {
         from: "level-1-a",
@@ -646,7 +661,7 @@ export const edgesCrm: Edge[] = [
         type: "straight",
         offset: 6,
         width: 1,
-        dash: "2,2",
+        dash: "0,0",
     },
 ];
 

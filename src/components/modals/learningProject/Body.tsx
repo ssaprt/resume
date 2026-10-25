@@ -31,13 +31,13 @@ export const Body = ({
             <ButtonHide setOpen={setOpen} />
             {children}
 
-            <span className="text-2xl! -mb-10 mt-10">
+            <span className="text-2xl! -mb-20 mt-10 max-w-8/10 text-center">
                 If there’s something you’d like to ask
             </span>
             <FiveBlockProvider>
                 <Fields unused />
             </FiveBlockProvider>
-            <div className="perspective-[1000px] -mt-20">
+            <div className="perspective-[1000px] -mt-16">
                 <MagneticShineButton
                     text="Close"
                     onClick={() => setOpen(false)}
